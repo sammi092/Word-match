@@ -168,7 +168,7 @@
 
     @media (min-width: 640px) {
       .controls-grid {
-        grid-template-columns: 2fr 1.3fr 1.1fr 1fr;
+        grid-template-columns: 2.2fr 1.3fr 1.1fr 1fr;
         gap: 8px;
       }
     }
@@ -211,7 +211,7 @@
 
     .btn-secondary {
       flex-shrink: 0;
-      padding: 6px 10px;
+      padding: 6px 9px;
       background: rgba(30, 41, 59, 0.9);
       border: 1px solid #475569;
       border-radius: 10px;
@@ -595,6 +595,9 @@
       <button id="shareCategoryBtn" class="btn-secondary" style="color:#34d399;" title="分享目前題庫專屬連結">
         <span>🔗</span>
       </button>
+      <button id="importCategoryBtn" class="btn-secondary" style="color:#38bdf8;" title="貼上連結或代碼匯入題庫">
+        <span>📥</span>
+      </button>
       <button id="editCategoryBtn" class="btn-secondary" style="color:#e2e8f0;" title="編輯修改目前題庫">
         <span>✏️</span>
       </button>
@@ -675,7 +678,7 @@
 
   <!-- 拼字挑戰彈窗 -->
   <div id="spellingModal" class="modal-overlay hidden">
-    <div class="modal-card" style="max-width:380px;">
+    <div class="modal-card" style="max-width:390px;">
       <div style="font-size:32px;margin-bottom:6px;">✍️</div>
       <h3 class="modal-title">拼字挑戰</h3>
       <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;">請輸入該中文對應的英文單字：</p>
@@ -683,6 +686,7 @@
       <div style="background:rgba(15,23,42,0.8);border-radius:12px;padding:12px;border:1px solid var(--border-color);margin-bottom:14px;">
         <div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">中文提示：</div>
         <div id="spellingChinesePrompt" style="font-size:20px;font-weight:900;color:#34d399;">蘋果</div>
+        <div style="font-size:11px;color:#fbbf24;margin-top:6px;">⚠️ 嚴格模式：英文大小寫與空格必須完全一致</div>
       </div>
 
       <input 
@@ -700,12 +704,45 @@
       <div id="spellingHintText" style="font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:2px;font-family:monospace;min-height:18px;margin-bottom:8px;"></div>
       <div id="spellingErrorMsg" style="font-size:11px;color:#f87171;font-weight:700;min-height:16px;margin-bottom:10px;"></div>
 
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:6px;">
+        <button id="spellingAbandonBtn" class="btn-secondary" style="flex:1;justify-content:center;color:#f43f5e;border-color:rgba(244,63,94,0.4);" title="拼不出來可放棄這次配對，看好拼法下次再配">
+          🏳️ 放棄
+        </button>
         <button id="spellingHintBtn" class="btn-secondary" style="flex:1;justify-content:center;color:#fbbf24;border-color:rgba(251,191,36,0.4);">
           💡 提示
         </button>
-        <button id="spellingSubmitBtn" class="btn-primary-action" style="flex:2;">
+        <button id="spellingSubmitBtn" class="btn-primary-action" style="flex:1.5;">
           確認送出
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 匯入題庫彈窗 -->
+  <div id="importModal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width:420px;text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="font-size:16px;font-weight:800;color:#fff;">
+          <span>📥</span> <span>貼上連結匯入題庫</span>
+        </h3>
+        <button id="closeImportModalBtn" style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:20px;">✕</button>
+      </div>
+
+      <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;line-height:1.4;">
+        請在下方貼上您在 Safari 或由好友複製的「專屬分享連結」，系統將直接匯入並永久保存在此 App 中：
+      </p>
+
+      <div style="margin-bottom:10px;">
+        <textarea id="importUrlInput" rows="3" placeholder="貼上完整連結（例如 https://...#share=...）" style="width:100%;background:#0b132b;border:1px solid #475569;border-radius:10px;padding:8px 10px;font-size:12px;color:#e2e8f0;font-family:monospace;outline:none;resize:none;"></textarea>
+      </div>
+
+      <div id="importErrorMsg" style="font-size:11px;color:#f87171;font-weight:700;min-height:16px;margin-bottom:12px;"></div>
+
+      <div style="display:flex;gap:6px;">
+        <button id="pasteClipboardBtn" class="btn-secondary" style="color:#38bdf8;">📋 讀取剪貼簿</button>
+        <button id="cancelImportModalBtn" class="btn-secondary" style="color:#cbd5e1;">取消</button>
+        <button id="confirmImportModalBtn" class="btn-primary-action" style="background:linear-gradient(90deg, #0284c7, #4f46e5);flex:1;">
+          確認匯入
         </button>
       </div>
     </div>
@@ -728,7 +765,7 @@
 
       <p style="font-size:11px;color:#94a3b8;margin-bottom:8px;line-height:1.4;">
         格式：每行一組，以 <strong style="color:#38bdf8;">空格、逗號、頓號或冒號</strong> 隔開中英文。<br>
-        例如：<code style="color:#38bdf8;">apple 蘋果</code> 或 <code style="color:#38bdf8;">banana, 香蕉</code>
+        例如：<code style="color:#38bdf8;">the UK 英國</code> 或 <code style="color:#38bdf8;">banana, 香蕉</code>
       </p>
 
       <textarea id="customInput" rows="6" style="width:100%;background:#0b132b;border:1px solid #475569;border-radius:10px;padding:10px;font-size:12px;color:#e2e8f0;font-family:monospace;outline:none;resize:none;" placeholder="apple 蘋果&#10;banana 香蕉&#10;cat 貓咪&#10;dog 狗狗&#10;book 書本&#10;desk 書桌"></textarea>
@@ -895,7 +932,6 @@
     // === 本機題庫儲存與跨版本防遺失保護 ===
     function loadCategoriesFromStorage() {
       try {
-        // 優先讀取當前版本
         const raw = localStorage.getItem(STORAGE_KEY_CATEGORIES);
         if (raw) {
           const parsed = JSON.parse(raw);
@@ -905,13 +941,11 @@
           }
         }
 
-        // 容錯防護：檢查舊版本快取，自動平滑遷移，確保自訂單字永不遺失
         for (const fbKey of FALLBACK_KEYS) {
           const fbRaw = localStorage.getItem(fbKey);
           if (fbRaw) {
             const parsed = JSON.parse(fbRaw);
             if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-              // 過濾掉舊版的內建預設，保留使用者自訂與匯入的題庫
               const userCats = {};
               Object.entries(parsed).forEach(([k, v]) => {
                 if (k.startsWith('cat_custom_') || k.startsWith('cat_import_') || k.startsWith('cat_cloud_')) {
@@ -976,7 +1010,7 @@
       if (catEntries.length === 0) {
         const emptyOpt = document.createElement('option');
         emptyOpt.value = '';
-        emptyOpt.textContent = '📂 尚無題庫 (請點擊新增)';
+        emptyOpt.textContent = '📁 尚無題庫 (請點擊新增)';
         emptyOpt.disabled = true;
         emptyOpt.selected = true;
         select.appendChild(emptyOpt);
@@ -989,6 +1023,7 @@
         });
       }
 
+      // 僅保留「新增自訂題庫」，移除紅色圈選的「貼上連結匯入題庫」選項
       const addOpt = document.createElement('option');
       addOpt.value = '__CREATE_NEW__';
       addOpt.textContent = '➕ 新增自訂題庫...';
@@ -1036,6 +1071,17 @@
     const spellingErrorMsg = document.getElementById('spellingErrorMsg');
     const spellingHintBtn = document.getElementById('spellingHintBtn');
     const spellingSubmitBtn = document.getElementById('spellingSubmitBtn');
+    const spellingAbandonBtn = document.getElementById('spellingAbandonBtn');
+
+    // 匯入彈窗元件
+    const importCategoryBtn = document.getElementById('importCategoryBtn');
+    const importModal = document.getElementById('importModal');
+    const importUrlInput = document.getElementById('importUrlInput');
+    const importErrorMsg = document.getElementById('importErrorMsg');
+    const pasteClipboardBtn = document.getElementById('pasteClipboardBtn');
+    const cancelImportModalBtn = document.getElementById('cancelImportModalBtn');
+    const confirmImportModalBtn = document.getElementById('confirmImportModalBtn');
+    const closeImportModalBtn = document.getElementById('closeImportModalBtn');
 
     // 自訂題庫管理元件
     const customModal = document.getElementById('customModal');
@@ -1084,7 +1130,7 @@
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => {
         toastNotification.classList.remove('show');
-      }, 2600);
+      }, 2800);
     }
 
     function formatTime(totalSeconds) {
@@ -1166,14 +1212,21 @@
           <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:14px;text-align:center;gap:12px;padding:20px;">
             <div style="font-size:42px;">📝</div>
             <div style="font-size:16px;font-weight:800;color:#f1f5f9;">目前尚未新增任何題庫</div>
-            <p style="font-size:12px;color:#94a3b8;max-width:320px;">點擊下方按鈕自訂輸入單字，或透過好友分享的專屬連結開啟題庫！</p>
-            <button id="emptyStateAddBtn" class="btn-primary-action" style="max-width:200px;margin-top:6px;">
-              ➕ 立即新增題庫
-            </button>
+            <p style="font-size:12px;color:#94a3b8;max-width:320px;">點擊下方按鈕自訂輸入單字，或貼上由 Safari 複製的分享連結！</p>
+            <div style="display:flex;gap:8px;margin-top:6px;">
+              <button id="emptyStateImportBtn" class="btn-secondary" style="color:#38bdf8;border-color:#38bdf8;">
+                📥 貼上連結匯入
+              </button>
+              <button id="emptyStateAddBtn" class="btn-primary-action" style="max-width:160px;">
+                ➕ 新增題庫
+              </button>
+            </div>
           </div>
         `;
         const emptyBtn = document.getElementById('emptyStateAddBtn');
         if (emptyBtn) emptyBtn.onclick = () => openCustomModal(false);
+        const emptyImportBtn = document.getElementById('emptyStateImportBtn');
+        if (emptyImportBtn) emptyImportBtn.onclick = openImportModal;
         return;
       }
 
@@ -1200,14 +1253,14 @@
           pairId: `pair_${index}`,
           type: 'en',
           text: item.en,
-          cleanWord: item.en.toLowerCase().replace(/[^a-z]/g, ''),
+          cleanWord: item.en.trim(),
           spokenWord: item.en
         });
         cardList.push({
           pairId: `pair_${index}`,
           type: 'zh',
           text: item.zh,
-          cleanWord: item.en.toLowerCase().replace(/[^a-z]/g, ''),
+          cleanWord: item.en.trim(),
           spokenWord: item.en
         });
       });
@@ -1229,7 +1282,6 @@
 
         const isMemory = (currentMode === 'memory');
 
-        // 在暗牌模式使用 3D 結構；在明牌模式直接以穩定 2D 面板呈現，防止 WebKit 深度隨機掉幀
         if (isMemory) {
           const innerEl = document.createElement('div');
           innerEl.className = 'card-inner';
@@ -1256,10 +1308,8 @@
           innerEl.appendChild(backFace);
           itemEl.appendChild(innerEl);
 
-          // 初始暗牌背面朝上
           innerEl.classList.add('flipped');
         } else {
-          // 明牌直接呈現正面
           const frontFace = document.createElement('div');
           frontFace.className = `card-face ${cardData.type === 'en' ? 'en-face' : 'zh-face'}`;
 
@@ -1290,19 +1340,16 @@
       const isMemory = (currentMode === 'memory');
       const inner = cardEl.querySelector('.card-inner');
 
-      // 若暗牌模式下點擊已翻開的同一張卡片
       if (isMemory && inner && !inner.classList.contains('flipped') && cardEl === firstCard) {
         return;
       }
 
-      // 明牌模式下點擊已選取的同一張卡片則取消選取
       if (!isMemory && cardEl === firstCard) {
         cardEl.classList.remove('card-selected', 'card-selected-zh');
         firstCard = null;
         return;
       }
 
-      // 翻開/選取卡片
       if (isMemory && inner) {
         inner.classList.remove('flipped');
       }
@@ -1316,13 +1363,11 @@
 
       playTone(440, 'sine', 0.08, 0, 0.15);
 
-      // 第一張選取
       if (!firstCard) {
         firstCard = cardEl;
         return;
       }
 
-      // 第二張選取
       secondCard = cardEl;
 
       const card1Type = firstCard.dataset.type;
@@ -1330,16 +1375,13 @@
       const card1PairId = firstCard.dataset.pairId;
       const card2PairId = secondCard.dataset.pairId;
 
-      // 配對比對（嚴格檢驗：必須是一中一英且屬於同一配對；若點選兩張中文或兩張英文，均視為失誤並計錯）
       isProcessing = true;
 
       if (card1Type !== card2Type && card1PairId === card2PairId) {
-        // === 配對成功：一律強制進入拼字挑戰 ===
         currentCombo++;
         if (currentCombo > maxCombo) maxCombo = currentCombo;
         comboDisplay.textContent = currentCombo.toString();
 
-        // 觸發拼字挑戰彈窗
         pendingMatchedCard1 = firstCard;
         pendingMatchedCard2 = secondCard;
 
@@ -1349,7 +1391,6 @@
         pendingTargetWord = enCardData.cleanWord;
         hintRevealIndex = 0;
 
-        // 若為暗牌模式，稍作延遲待翻牌完成後再開啟彈窗
         const delayShowModal = isMemory ? 400 : 0;
         setTimeout(() => {
           spellingChinesePrompt.textContent = zhCardData.text;
@@ -1361,7 +1402,6 @@
           setTimeout(() => spellingInput.focus(), 150);
         }, delayShowModal);
       } else {
-        // === 配對失敗：暗牌模式先保留 300 毫秒翻開看清，再執行失誤動作 ===
         const delayBeforeError = isMemory ? 300 : 0;
 
         setTimeout(() => {
@@ -1407,15 +1447,14 @@
       secondCard = null;
       isProcessing = false;
 
-      // 檢查是否通關
       if (matchedPairsCount >= activePairs.length) {
         setTimeout(handleVictory, 400);
       }
     }
 
-    // 拼字提交校對
     function checkSpelling() {
-      const val = spellingInput.value.trim().toLowerCase().replace(/[^a-z]/g, '');
+      // 嚴格比對：只去除使用者前後不小心多打的換行或外圍空格，內部空格與大小寫必須完全一致
+      const val = spellingInput.value.trim();
       if (!val) {
         spellingErrorMsg.textContent = '請輸入英文單字！';
         return;
@@ -1424,14 +1463,55 @@
       if (val === pendingTargetWord) {
         spellingErrorMsg.textContent = '';
         spellingModal.classList.add('hidden');
-        showToast('拼字正確！消除成功', '🎉');
+        showToast('拼字完全正確！消除成功', '🎉');
         finalizeMatchSuccess(pendingMatchedCard1, pendingMatchedCard2);
       } else {
-        spellingErrorMsg.textContent = '拼寫不正確，請再試一次！';
+        if (val.toLowerCase() === pendingTargetWord.toLowerCase()) {
+          spellingErrorMsg.textContent = '字母正確，但大小寫或空格不符！請注意！';
+        } else {
+          spellingErrorMsg.textContent = '拼寫不正確，大小寫與空格須完全相符！';
+        }
         playMismatchSound();
         spellingInput.classList.add('card-shake');
         setTimeout(() => spellingInput.classList.remove('card-shake'), 400);
       }
+    }
+
+    // === 放棄本次配對機制 ===
+    function abandonSpellingChallenge() {
+      if (!pendingTargetWord) return;
+
+      // 關閉拼字視窗
+      spellingModal.classList.add('hidden');
+
+      // 中斷連擊、增加失誤紀錄
+      currentCombo = 0;
+      mistakes++;
+      comboDisplay.textContent = '0';
+      playMismatchSound();
+
+      // 解除兩張卡片選取狀態，若是暗牌則蓋回背面
+      if (pendingMatchedCard1 && pendingMatchedCard2) {
+        pendingMatchedCard1.classList.remove('card-selected', 'card-selected-zh');
+        pendingMatchedCard2.classList.remove('card-selected', 'card-selected-zh');
+
+        if (currentMode === 'memory') {
+          const inner1 = pendingMatchedCard1.querySelector('.card-inner');
+          const inner2 = pendingMatchedCard2.querySelector('.card-inner');
+          if (inner1) inner1.classList.add('flipped');
+          if (inner2) inner2.classList.add('flipped');
+        }
+      }
+
+      // 僅提示已放棄本次配對，不洩漏正確答案
+      showToast('已放棄本次配對，可重新挑戰！', '🏳️');
+
+      // 重設配對狀態
+      pendingMatchedCard1 = null;
+      pendingMatchedCard2 = null;
+      firstCard = null;
+      secondCard = null;
+      isProcessing = false;
     }
 
     spellingSubmitBtn.addEventListener('click', checkSpelling);
@@ -1439,13 +1519,18 @@
       if (e.key === 'Enter') checkSpelling();
     });
 
+    spellingAbandonBtn.addEventListener('click', abandonSpellingChallenge);
+
     spellingHintBtn.addEventListener('click', () => {
       if (!pendingTargetWord) return;
       hintRevealIndex = Math.min(hintRevealIndex + 1, pendingTargetWord.length);
       let hintStr = '';
       for (let i = 0; i < pendingTargetWord.length; i++) {
-        if (i < hintRevealIndex) {
-          hintStr += pendingTargetWord[i].toUpperCase() + ' ';
+        const char = pendingTargetWord[i];
+        if (char === ' ') {
+          hintStr += '  '; // 空格維持空格空隙
+        } else if (i < hintRevealIndex) {
+          hintStr += char + ' ';
         } else {
           hintStr += '_ ';
         }
@@ -1505,53 +1590,81 @@
       const seenEnglish = new Set();
       let duplicateCount = 0;
 
+      // 正則判斷中文字元 (CJK 漢字與常用中文標點) 及英文字母
+      const cjkRegex = /[\u4e00-\u9fa5\u3400-\u4dbf]/;
+      const engRegex = /[a-zA-Z]/;
+
       lines.forEach((line, idx) => {
         const raw = line.trim();
         if (!raw) return;
-
-        const parts = raw.split(/[\s,，、:：\t]+/);
         const lineNum = idx + 1;
 
-        if (parts.length >= 2) {
-          const first = parts[0].trim();
-          const rest = parts.slice(1).join(' ').trim();
+        let en = '';
+        let zh = '';
 
-          const hasEnglishFirst = /^[a-zA-Z\s\-']+$/.test(first);
-          const hasEnglishRest = /^[a-zA-Z\s\-']+$/.test(rest);
+        // 1. 優先檢查是否有明確的分隔標點 (逗號、頓號、冒號、Tab)
+        const punctMatch = raw.match(/[,，、:：\t]+/);
 
-          let en = '';
-          let zh = '';
+        if (punctMatch) {
+          const splitIdx = punctMatch.index;
+          const part1 = raw.slice(0, splitIdx).trim();
+          const part2 = raw.slice(splitIdx + punctMatch[0].length).trim();
 
-          if (hasEnglishFirst) {
-            en = first;
-            zh = rest;
-          } else if (hasEnglishRest) {
-            en = rest;
-            zh = first;
+          if (engRegex.test(part1) && cjkRegex.test(part2)) {
+            en = part1;
+            zh = part2;
+          } else if (cjkRegex.test(part1) && engRegex.test(part2)) {
+            zh = part1;
+            en = part2;
           } else {
-            en = first;
-            zh = rest;
-          }
-
-          const cleanEn = en.toLowerCase().replace(/[^a-z]/g, '');
-
-          if (!cleanEn) {
-            incompleteList.push({ line: lineNum, text: raw, reason: '缺少有效英文字母' });
-          } else if (!zh) {
-            incompleteList.push({ line: lineNum, text: raw, reason: '缺少中文解釋' });
-          } else if (seenEnglish.has(cleanEn)) {
-            duplicateCount++;
-          } else {
-            seenEnglish.add(cleanEn);
-            validList.push({ en, zh });
+            en = part1;
+            zh = part2;
           }
         } else {
-          // 單一欄位診斷缺項
-          const onlyWord = parts[0].trim();
-          if (/^[a-zA-Z\s\-']+$/.test(onlyWord)) {
-            incompleteList.push({ line: lineNum, text: raw, reason: '缺少「中文解釋」與分隔符號' });
+          // 2. 空格分隔：以中英文交界點作為切分依據（保護英文內部的空格，如 the UK 之間的空格）
+          const firstCjk = raw.search(cjkRegex);
+          const firstEng = raw.search(engRegex);
+
+          if (firstCjk !== -1 && firstEng !== -1) {
+            if (firstEng < firstCjk) {
+              // 英文在前面，中文在後面 (例如："the UK 英國"、"ice cream 冰淇淋")
+              en = raw.slice(0, firstCjk).trim();
+              zh = raw.slice(firstCjk).trim();
+            } else {
+              // 中文在前面，英文在後面 (例如："英國 the UK")
+              zh = raw.slice(0, firstEng).trim();
+              en = raw.slice(firstEng).trim();
+            }
+          } else if (firstEng !== -1) {
+            // 只有英文，缺少中文
+            en = raw;
+            zh = '';
           } else {
-            incompleteList.push({ line: lineNum, text: raw, reason: '缺少「英文單字」與分隔符號' });
+            // 只有中文，缺少英文
+            zh = raw;
+            en = '';
+          }
+        }
+
+        const hasValidEn = engRegex.test(en);
+        const hasValidZh = Boolean(zh && zh.trim());
+
+        if (!hasValidEn && !hasValidZh) {
+          incompleteList.push({ line: lineNum, text: raw, reason: '無法辨識中英文，請以空格或逗號隔開' });
+        } else if (!hasValidEn) {
+          incompleteList.push({ line: lineNum, text: raw, reason: '缺少「英文單字或片語」' });
+        } else if (!hasValidZh) {
+          incompleteList.push({ line: lineNum, text: raw, reason: '缺少「中文解釋」' });
+        } else {
+          // 正規化內部多餘連續空格為單一空格，但嚴格保留大小寫
+          const normalizedEn = en.replace(/\s+/g, ' ').trim();
+          const cleanKey = normalizedEn.toLowerCase();
+
+          if (seenEnglish.has(cleanKey)) {
+            duplicateCount++;
+          } else {
+            seenEnglish.add(cleanKey);
+            validList.push({ en: normalizedEn, zh: zh.trim() });
           }
         }
       });
@@ -1758,6 +1871,72 @@
 
     closeShareModalBtn.addEventListener('click', () => shareModal.classList.add('hidden'));
 
+    // === 匯入題庫彈窗邏輯 ===
+    function openImportModal() {
+      importUrlInput.value = '';
+      importErrorMsg.textContent = '';
+      importModal.classList.remove('hidden');
+      setTimeout(() => importUrlInput.focus(), 150);
+    }
+
+    function processImportData(rawText) {
+      if (!rawText || !rawText.trim()) {
+        return { success: false, msg: '請貼上分享連結或代碼！' };
+      }
+      let text = rawText.trim();
+      let code = text;
+
+      if (text.includes('share=')) {
+        const m = text.match(/share=([A-Za-z0-9_\-]+)/);
+        if (m && m[1]) code = m[1];
+      }
+
+      const data = decodeFromUrlSafe(code);
+      if (data && data.title && Array.isArray(data.list) && data.list.length >= 2) {
+        const id = `cat_import_${Date.now()}`;
+        const cleanTitle = data.title.replace(/\s*\(匯入\)$/, '');
+        savedCategories[id] = { name: cleanTitle, words: data.list };
+        currentCategoryId = id;
+
+        saveAllCategoriesToStorage();
+        saveGameSettings();
+        updateCategoryDropdown();
+        initGame();
+        return { success: true, title: cleanTitle, count: data.list.length };
+      }
+
+      return { success: false, msg: '無法辨識此連結內容，請確認是否完整複製！' };
+    }
+
+    importCategoryBtn.addEventListener('click', openImportModal);
+    closeImportModalBtn.addEventListener('click', () => importModal.classList.add('hidden'));
+    cancelImportModalBtn.addEventListener('click', () => importModal.classList.add('hidden'));
+
+    confirmImportModalBtn.addEventListener('click', () => {
+      const res = processImportData(importUrlInput.value);
+      if (res.success) {
+        importModal.classList.add('hidden');
+        showToast(`已成功匯入題庫：「${res.title}」！`, '🎉');
+      } else {
+        importErrorMsg.textContent = res.msg;
+      }
+    });
+
+    pasteClipboardBtn.addEventListener('click', async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const txt = await navigator.clipboard.readText();
+          if (txt) {
+            importUrlInput.value = txt;
+            importErrorMsg.textContent = '';
+            showToast('已從剪貼簿貼上！', '📋');
+            return;
+          }
+        }
+      } catch (e) {}
+      showToast('請長按輸入框選擇「貼上」！', '💡');
+    });
+
     function checkImport() {
       try {
         let code = new URLSearchParams(window.location.search).get('share');
@@ -1766,17 +1945,9 @@
           if (m) code = m[1];
         }
         if (!code) return;
-        const data = decodeFromUrlSafe(code);
-        if (data && data.title && Array.isArray(data.list) && data.list.length >= 2) {
-          const id = `cat_import_${Date.now()}`;
-          savedCategories[id] = { name: `${data.title} (匯入)`, words: data.list };
-          currentCategoryId = id;
-
-          saveAllCategoriesToStorage();
-          saveGameSettings();
-
-          updateCategoryDropdown();
-          showToast(`已成功載入題庫：「${data.title}」！`, '📥');
+        const res = processImportData(code);
+        if (res.success) {
+          showToast(`已成功載入題庫：「${res.title}」！`, '📥');
           window.history.replaceState(null, document.title, window.location.pathname);
         }
       } catch (e) {}
