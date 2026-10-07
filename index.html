@@ -409,6 +409,61 @@
     </div>
   </div>
 
+  <!-- Dedicated Share Category Modal -->
+  <div id="shareModal" class="fixed inset-0 z-50 bg-[#060a17]/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-[#101b38] border border-emerald-500/40 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl text-left relative overflow-hidden">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <span>🔗</span> <span>分享題庫專屬連結</span>
+        </h3>
+        <button id="closeShareModalBtn" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="bg-slate-900/80 rounded-2xl p-3 border border-slate-700/60 mb-3">
+        <div class="text-xs text-slate-400 mb-0.5">即將分享的題庫：</div>
+        <div id="shareModalTitle" class="text-sm sm:text-base font-bold text-emerald-300 truncate">基礎日常單字</div>
+        <div id="shareModalCount" class="text-[11px] text-slate-400 mt-0.5">共收錄 10 組單字配對</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-xs font-semibold text-slate-300 mb-1">專屬連結網址（點擊即可全選）：</label>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="shareUrlInput" 
+            readonly 
+            class="w-full bg-[#0b132b] border border-slate-700 focus:border-emerald-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 font-mono focus:outline-none transition shadow-inner select-all" 
+          />
+        </div>
+      </div>
+
+      <div id="sharePreviewWarning" class="hidden mb-3 p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-[11px] text-amber-300 leading-relaxed">
+        ⚠️ <strong>小提醒</strong>：您目前處於預覽環境。若要讓好友正常遊玩，請至您已發布的 GitHub Pages 正式網址點擊「分享」複製連結！
+      </div>
+
+      <p class="text-[11px] text-slate-400 mb-4 leading-relaxed">
+        💡 好友只要透過此連結打開遊戲，系統就會自動匯入這組題庫並直接開啟對對碰挑戰！
+      </p>
+
+      <div class="flex items-center gap-2">
+        <button 
+          id="nativeShareBtn" 
+          class="hidden px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-sky-300 text-xs sm:text-sm font-bold border border-slate-700 transition flex items-center justify-center gap-1.5"
+        >
+          <span>📲</span> <span>系統分享</span>
+        </button>
+        <button 
+          id="copyShareUrlBtn" 
+          class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-1.5"
+        >
+          <span>📋</span> <span id="copyBtnText">一鍵複製連結</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Share Success Toast Notification -->
   <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-slate-900/95 border border-sky-500/60 shadow-2xl text-xs sm:text-sm font-bold text-white flex items-center gap-2 transform -translate-y-12 opacity-0 pointer-events-none transition-all duration-300">
     <span id="toastIcon">🔗</span>
@@ -637,6 +692,17 @@
     const toastIcon = document.getElementById('toastIcon');
     const toastMessage = document.getElementById('toastMessage');
 
+    // Share Modal Elements
+    const shareModal = document.getElementById('shareModal');
+    const closeShareModalBtn = document.getElementById('closeShareModalBtn');
+    const shareModalTitle = document.getElementById('shareModalTitle');
+    const shareModalCount = document.getElementById('shareModalCount');
+    const shareUrlInput = document.getElementById('shareUrlInput');
+    const copyShareUrlBtn = document.getElementById('copyShareUrlBtn');
+    const copyBtnText = document.getElementById('copyBtnText');
+    const nativeShareBtn = document.getElementById('nativeShareBtn');
+    const sharePreviewWarning = document.getElementById('sharePreviewWarning');
+
     let toastTimeout = null;
     function showToast(message, icon = '🔗', duration = 3000) {
       if (toastTimeout) clearTimeout(toastTimeout);
@@ -650,26 +716,80 @@
       }, duration);
     }
 
-    // Copy text to clipboard safely supporting iframe environment
-    function copyTextToClipboard(text) {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.position = "fixed";
-      textArea.style.top = "-9999px";
-      textArea.style.left = "-9999px";
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      try {
-        document.execCommand('copy');
-      } catch (err) {
-        console.error('Copy failed:', err);
+    // High-compatibility URL-safe Base64 encoder using native TextEncoder
+    function encodeToUrlSafeBase64(dataObj) {
+      const jsonStr = JSON.stringify(dataObj);
+      const utf8Bytes = new TextEncoder().encode(jsonStr);
+      let binaryStr = '';
+      for (let i = 0; i < utf8Bytes.length; i++) {
+        binaryStr += String.fromCharCode(utf8Bytes[i]);
       }
-      document.body.removeChild(textArea);
+      const base64 = btoa(binaryStr);
+      // Replace non-URL-safe characters (+, /, =)
+      return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
 
-    // Share Category via URL parameter / hash
-    function shareCurrentCategory() {
+    // High-compatibility URL-safe Base64 decoder using native TextDecoder
+    function decodeFromUrlSafeBase64(encodedStr) {
+      try {
+        let base64 = encodedStr.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) {
+          base64 += '=';
+        }
+        const binaryStr = atob(base64);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const jsonStr = new TextDecoder().decode(bytes);
+        return JSON.parse(jsonStr);
+      } catch (err) {
+        // Fallback for older legacy encoding
+        try {
+          const raw = decodeURIComponent(atob(encodedStr));
+          return JSON.parse(raw);
+        } catch (e2) {
+          console.error('All decode attempts failed:', err, e2);
+          return null;
+        }
+      }
+    }
+
+    // Copy text to clipboard safely across iOS Safari, HTTPS, and iframes
+    async function copyTextSafely(text) {
+      let copied = false;
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          copied = true;
+        } catch (e) {
+          copied = false;
+        }
+      }
+
+      if (!copied) {
+        try {
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          textArea.style.position = "fixed";
+          textArea.style.left = "0";
+          textArea.style.top = "0";
+          textArea.style.opacity = "0";
+          textArea.setAttribute('readonly', '');
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.setSelectionRange(0, text.length);
+          copied = document.execCommand('copy');
+          document.body.removeChild(textArea);
+        } catch (err) {
+          console.warn('Fallback copy failed:', err);
+        }
+      }
+      return copied;
+    }
+
+    // Share Category handler: opens modal, prepares URL and triggers copy/share
+    async function shareCurrentCategory() {
       const cat = savedCategories[currentCategoryId];
       if (!cat || !cat.words || cat.words.length === 0) {
         showToast('目前題庫沒有單字可供分享', '⚠️');
@@ -681,45 +801,132 @@
           title: cat.name,
           list: cat.words
         };
-        // Encode using UTF-8 safe base64
-        const jsonStr = JSON.stringify(payload);
-        const encoded = btoa(encodeURIComponent(jsonStr));
-        const url = new URL(window.location.href);
-        url.search = '';
-        url.hash = `share=${encoded}`;
-        
-        copyTextToClipboard(url.toString());
-        showToast(`已複製「${cat.name}」分享連結，傳送給好友即可直接玩！`, '🎉');
+
+        const encodedCode = encodeToUrlSafeBase64(payload);
+        const currentUrl = new URL(window.location.href);
+
+        // Support both query parameter and hash fallback for all hosting types
+        currentUrl.searchParams.set('share', encodedCode);
+        currentUrl.hash = `share=${encodedCode}`;
+        const fullShareUrl = currentUrl.toString();
+
+        // Update Share Modal content
+        shareModalTitle.textContent = cat.name;
+        shareModalCount.textContent = `共收錄 ${cat.words.length} 組單字配對`;
+        shareUrlInput.value = fullShareUrl;
+
+        // Check if currently on a blob / sandboxed preview URL
+        const isPreviewEnv = window.location.protocol === 'blob:' || 
+                             window.location.origin === 'null' || 
+                             window.location.hostname === 'localhost';
+        if (isPreviewEnv) {
+          sharePreviewWarning.classList.remove('hidden');
+        } else {
+          sharePreviewWarning.classList.add('hidden');
+        }
+
+        // Show native share button if supported (iOS Safari, Android Chrome)
+        if (navigator.share) {
+          nativeShareBtn.classList.remove('hidden');
+          nativeShareBtn.onclick = async () => {
+            try {
+              await navigator.share({
+                title: `單字對對碰 - ${cat.name}`,
+                text: `來玩「${cat.name}」英語單字配對挑戰！共 ${cat.words.length} 組單字：`,
+                url: fullShareUrl
+              });
+            } catch (err) {
+              // User canceled share
+            }
+          };
+        } else {
+          nativeShareBtn.classList.add('hidden');
+        }
+
+        copyBtnText.textContent = '一鍵複製連結';
+        shareModal.classList.remove('hidden');
+        shareModal.style.display = 'flex';
+
+        // Auto copy immediately upon clicking share
+        const success = await copyTextSafely(fullShareUrl);
+        if (success) {
+          copyBtnText.textContent = '✅ 已複製到剪貼簿！';
+          showToast(`已成功複製「${cat.name}」專屬連結！`, '🎉');
+          setTimeout(() => {
+            copyBtnText.textContent = '一鍵複製連結';
+          }, 2500);
+        }
+
+        setTimeout(() => {
+          shareUrlInput.focus();
+          shareUrlInput.select();
+        }, 150);
+
       } catch (e) {
-        console.error(e);
-        showToast('產生分享連結失敗，請再試一次', '⚠️');
+        console.error('Share generation error:', e);
+        showToast('產生分享連結時發生錯誤', '⚠️');
       }
     }
 
-    // Check and import category from URL hash on load
+    copyShareUrlBtn.addEventListener('click', async () => {
+      const url = shareUrlInput.value;
+      const success = await copyTextSafely(url);
+      if (success) {
+        copyBtnText.textContent = '✅ 已成功複製！';
+        showToast('已成功複製題庫分享連結！', '📋');
+        setTimeout(() => {
+          copyBtnText.textContent = '一鍵複製連結';
+        }, 2000);
+      } else {
+        shareUrlInput.focus();
+        shareUrlInput.select();
+        showToast('請長按網址並點選「複製」', '💡');
+      }
+    });
+
+    closeShareModalBtn.addEventListener('click', () => {
+      shareModal.classList.add('hidden');
+      shareModal.style.display = 'none';
+    });
+
+    // Check and import category from URL (supports ?share= and #share=)
     function checkImportFromURL() {
       try {
-        const hash = window.location.hash;
-        if (!hash || !hash.includes('share=')) return;
+        let rawCode = null;
 
-        const rawData = hash.split('share=')[1];
-        if (!rawData) return;
+        // 1. Check Search Query: ?share=...
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.has('share')) {
+          rawCode = searchParams.get('share');
+        }
 
-        const decoded = decodeURIComponent(atob(rawData));
-        const importedData = JSON.parse(decoded);
+        // 2. Check Hash: #share=...
+        if (!rawCode && window.location.hash) {
+          const hashMatch = window.location.hash.match(/share=([^&]+)/);
+          if (hashMatch && hashMatch[1]) {
+            rawCode = hashMatch[1];
+          }
+        }
+
+        if (!rawCode) return;
+
+        const importedData = decodeFromUrlSafeBase64(rawCode);
 
         if (importedData && importedData.title && Array.isArray(importedData.list) && importedData.list.length >= 2) {
           const importId = `cat_imported_${Date.now()}`;
+          const cleanTitle = importedData.title.replace(/\s*\(匯入\)$/, '');
+
           savedCategories[importId] = {
-            name: `${importedData.title} (匯入)`,
+            name: `${cleanTitle} (匯入)`,
             words: importedData.list
           };
           currentCategoryId = importId;
           updateCategoryDropdown();
-          showToast(`已成功匯入分享題庫：「${importedData.title}」！`, '📥', 4000);
+          showToast(`已成功載入分享題庫：「${cleanTitle}」！`, '📥', 4500);
 
-          // Clear hash to prevent duplicate prompt upon reload
-          history.replaceState(null, document.title, window.location.pathname + window.location.search);
+          // Clear parameters from address bar to prevent duplicate additions on refresh
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState(null, document.title, cleanUrl);
         }
       } catch (e) {
         console.warn('Could not parse shared category from URL', e);
