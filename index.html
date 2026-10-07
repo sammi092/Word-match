@@ -323,6 +323,16 @@
 
       <textarea id="customInput" rows="6" class="w-full bg-[#0b132b] border border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-slate-200 font-mono focus:outline-none focus:border-sky-500 custom-scroll resize-none" placeholder="apple 蘋果&#10;banana 香蕉&#10;cat 貓咪&#10;dog 狗狗&#10;book 書本&#10;desk 書桌"></textarea>
 
+      <!-- Incomplete / Missing Elements Error Notice Box -->
+      <div id="customIncompleteBox" class="mt-2 p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-xs text-amber-300 max-h-28 overflow-y-auto custom-scroll hidden">
+        <div class="flex items-center gap-1.5 font-bold mb-1 text-amber-400">
+          <span>⚠️</span> <span>部分行內容未完整（缺少對應元素）：</span>
+        </div>
+        <ul id="customIncompleteList" class="space-y-0.5 font-mono text-[11px] list-disc list-inside text-amber-200/90">
+          <!-- Dynamically inserted missing element warnings -->
+        </ul>
+      </div>
+
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mt-3">
         <span id="customCountNotice" class="text-xs text-slate-400">目前已偵測 0 組有效單字 (最少 6 組)</span>
         <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -539,6 +549,8 @@
     const editCategoryBtn = document.getElementById('editCategoryBtn');
     const deleteCustomBtn = document.getElementById('deleteCustomBtn');
     const customModalTitle = document.getElementById('customModalTitle');
+    const customIncompleteBox = document.getElementById('customIncompleteBox');
+    const customIncompleteList = document.getElementById('customIncompleteList');
 
     function shuffle(array) {
       const arr = [...array];
@@ -932,23 +944,35 @@
     function parseCustomInput(text) {
       const lines = text.split('\n');
       const pairs = [];
-      lines.forEach(line => {
+      const seenEn = new Set();
+      const incompleteLines = [];
+      let duplicateCount = 0;
+
+      lines.forEach((line, lineIdx) => {
+        const lineNum = lineIdx + 1;
         const trimmed = line.trim();
         if (!trimmed) return;
 
         let en = '';
         let zh = '';
 
-        // 優先檢查明確的標點符號分隔符號：逗號、中文逗號、冒號、全形冒號、頓號、Tab
+        // 優先檢查明確的分隔標點符號：逗號、中文逗號、冒號、全形冒號、頓號、Tab
         if (/[,，:：、\t]/.test(trimmed)) {
           const parts = trimmed.split(/[,，:：、\t]/);
-          if (parts.length >= 2) {
-            en = parts[0].trim();
-            zh = parts.slice(1).join(',').trim();
+          const rawFirst = (parts[0] || '').trim();
+          const rawSecond = parts.slice(1).join(',').trim();
+
+          // 判斷哪一邊是中文、哪一邊是英文
+          if (/[\u4e00-\u9fff]/.test(rawFirst) && !/[\u4e00-\u9fff]/.test(rawSecond)) {
+            zh = rawFirst;
+            en = rawSecond;
+          } else {
+            en = rawFirst;
+            zh = rawSecond;
           }
         } else {
           // 以空格（半形/全形）隔開的情況
-          // 1. 英文在前、中文在後（支援如 "living room 客廳"、"ice cream 冰淇淋" 等含空白片語）
+          // 1. 英文在前、中文在後（支援片語如 "living room 客廳"、"ice cream 冰淇淋"）
           const enThenZh = trimmed.match(/^([A-Za-z0-9\s\/\(\)\'\-\.\?\!]+?)\s+([\u4e00-\u9fff].*)$/);
           if (enThenZh) {
             en = enThenZh[1].trim();
@@ -960,7 +984,7 @@
               zh = zhThenEn[1].trim();
               en = zhThenEn[2].trim();
             } else {
-              // 3. 通用空白切分（以第一個空白處分割）
+              // 3. 嘗試以首個空白分割
               const spaceIdx = trimmed.search(/\s/);
               if (spaceIdx > 0) {
                 en = trimmed.substring(0, spaceIdx).trim();
@@ -970,11 +994,102 @@
           }
         }
 
-        if (en && zh) {
-          pairs.push({ en, zh });
+        // 診斷是否缺少元素並標註
+        if (!en && !zh) {
+          // 整行只有單一字串且未被成功分割
+          const hasChinese = /[\u4e00-\u9fff]/.test(trimmed);
+          const hasEnglish = /[A-Za-z]/.test(trimmed);
+
+          if (hasEnglish && !hasChinese) {
+            incompleteLines.push({
+              line: lineNum,
+              content: trimmed,
+              reason: '缺少「中文解釋」與分隔符號'
+            });
+          } else if (hasChinese && !hasEnglish) {
+            incompleteLines.push({
+              line: lineNum,
+              content: trimmed,
+              reason: '缺少「英文單字」與分隔符號'
+            });
+          } else {
+            incompleteLines.push({
+              line: lineNum,
+              content: trimmed,
+              reason: '缺少有效分隔符號（請以空白或逗號隔開中英文）'
+            });
+          }
+        } else if (en && !zh) {
+          incompleteLines.push({
+            line: lineNum,
+            content: trimmed,
+            reason: '缺少「中文解釋」'
+          });
+        } else if (!en && zh) {
+          incompleteLines.push({
+            line: lineNum,
+            content: trimmed,
+            reason: '缺少「英文單字」'
+          });
+        } else {
+          // 兩者皆齊全，驗證是否有文字實際缺少英文字母或中文字符
+          const hasEnChar = /[A-Za-z]/.test(en);
+          const hasZhChar = /[\u4e00-\u9fff]/.test(zh);
+
+          if (!hasEnChar && hasZhChar) {
+            incompleteLines.push({
+              line: lineNum,
+              content: trimmed,
+              reason: '英文欄位中未偵測到英文字母'
+            });
+          } else if (hasEnChar && !hasZhChar) {
+            incompleteLines.push({
+              line: lineNum,
+              content: trimmed,
+              reason: '中文欄位中未偵測到中文字符'
+            });
+          } else {
+            // 完整正確的組
+            const normKey = en.toLowerCase().trim();
+            if (seenEn.has(normKey)) {
+              duplicateCount++;
+            } else {
+              seenEn.add(normKey);
+              pairs.push({ en, zh });
+            }
+          }
         }
       });
+
+      pairs.duplicateCount = duplicateCount;
+      pairs.incompleteLines = incompleteLines;
       return pairs;
+    }
+
+    function renderInputFeedback() {
+      const parsed = parseCustomInput(customInput.value);
+      const dupText = parsed.duplicateCount > 0 ? ` (已自動過濾 ${parsed.duplicateCount} 組重複單字)` : '';
+      
+      // 更新有效組數提示
+      customCountNotice.textContent = `目前已偵測 ${parsed.length} 組有效單字${dupText}`;
+      if (parsed.length < 6) {
+        customCountNotice.classList.add('text-rose-400');
+        customCountNotice.textContent += ' (至少需 6 組有效單字)';
+      } else {
+        customCountNotice.classList.remove('text-rose-400');
+      }
+
+      // 檢查並顯示不完整缺項提示面板
+      if (parsed.incompleteLines && parsed.incompleteLines.length > 0) {
+        customIncompleteBox.classList.remove('hidden');
+        customIncompleteList.innerHTML = parsed.incompleteLines.map(item => {
+          const safeContent = item.content.length > 18 ? item.content.slice(0, 18) + '...' : item.content;
+          return `<li><span class="font-bold text-amber-300">第 ${item.line} 行</span>「<span class="underline decoration-dotted">${safeContent}</span>」：<span class="text-rose-300">${item.reason}</span></li>`;
+        }).join('');
+      } else {
+        customIncompleteBox.classList.add('hidden');
+        customIncompleteList.innerHTML = '';
+      }
     }
 
     function openCustomModal(isEdit = false) {
@@ -1005,29 +1120,21 @@
         deleteCustomBtn.classList.add('hidden');
       }
 
-      const parsed = parseCustomInput(customInput.value);
-      customCountNotice.textContent = `目前已偵測 ${parsed.length} 組有效單字 (最少 6 組)`;
-      customCountNotice.classList.remove('text-rose-400');
+      renderInputFeedback();
       customModal.classList.remove('hidden');
       customModal.style.display = 'flex';
     }
 
     customInput.addEventListener('input', () => {
-      const parsed = parseCustomInput(customInput.value);
-      customCountNotice.textContent = `目前已偵測 ${parsed.length} 組有效單字`;
-      if (parsed.length < 6) {
-        customCountNotice.classList.add('text-rose-400');
-        customCountNotice.textContent += ' (請至少輸入 6 組以啟動遊戲)';
-      } else {
-        customCountNotice.classList.remove('text-rose-400');
-      }
+      renderInputFeedback();
     });
 
     saveCustomBtn.addEventListener('click', () => {
       const parsed = parseCustomInput(customInput.value);
       if (parsed.length < 6) {
-        customCountNotice.textContent = '❌ 請至少輸入 6 組單字方可建立或修改主題！';
+        customCountNotice.textContent = '❌ 請至少輸入 6 組完整單字方可建立或修改主題！';
         customCountNotice.classList.add('text-rose-400');
+        renderInputFeedback();
         return;
       }
 
