@@ -193,7 +193,7 @@
   </header>
 
   <!-- Controls Bar: Category, Mode, Count, Restart (Fluid Full-Width) -->
-  <section class="w-full flex-shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 mb-2">
+  <section class="w-full flex-shrink-0 grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2 mb-2">
     <!-- Category Select & Edit Button -->
     <div class="flex items-center gap-1">
       <div class="relative flex-1 min-w-0">
@@ -221,6 +221,17 @@
       </div>
     </div>
 
+    <!-- Spelling Challenge Selector (Optional Mode) -->
+    <div class="relative">
+      <select id="spellingToggleSelect" class="w-full appearance-none bg-slate-800/90 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm text-slate-200 font-medium focus:outline-none focus:border-sky-500 transition shadow-sm cursor-pointer pr-7">
+        <option value="off" selected>⚡ 免拼字 (直接消除)</option>
+        <option value="on">✍️ 拼字挑戰 (需輸入英文)</option>
+      </select>
+      <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+    </div>
+
     <!-- Difficulty / Pair Count -->
     <div class="relative">
       <select id="pairsCountSelect" class="w-full appearance-none bg-slate-800/90 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm text-slate-200 font-medium focus:outline-none focus:border-sky-500 transition shadow-sm cursor-pointer pr-7">
@@ -235,7 +246,7 @@
     </div>
 
     <!-- Restart Button -->
-    <button id="restartBtn" class="flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 active:scale-95 text-white font-bold rounded-xl px-3 py-1.5 text-xs sm:text-sm shadow-md transition border border-sky-400/30">
+    <button id="restartBtn" class="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 active:scale-95 text-white font-bold rounded-xl px-3 py-1.5 text-xs sm:text-sm shadow-md transition border border-sky-400/30">
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
       重新洗牌
     </button>
@@ -268,33 +279,83 @@
         </span>
       </div>
 
-      <!-- Stats Grid (Dynamically adjusted in Memory mode vs Open mode) -->
+      <!-- Victory Stats Grid -->
       <div id="victoryStatsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-        <div id="victoryTimeCard" class="bg-[#0b132b]/80 border border-slate-700/80 rounded-2xl p-2.5">
-          <div class="text-[11px] text-slate-400 font-medium">總耗時</div>
-          <div id="victoryTime" class="text-sm sm:text-base font-black text-amber-400 font-mono mt-0.5">00:25</div>
+        <div class="bg-slate-900/70 border border-slate-700/60 p-2.5 rounded-2xl">
+          <span class="text-[11px] text-slate-400 block mb-0.5">總耗時</span>
+          <span id="victoryTime" class="font-mono text-base sm:text-lg font-bold text-amber-400">00:00</span>
         </div>
-        <div id="victoryComboCard" class="bg-[#0b132b]/80 border border-slate-700/80 rounded-2xl p-2.5">
-          <div class="text-[11px] text-slate-400 font-medium">最高連擊</div>
-          <div id="victoryCombo" class="text-sm sm:text-base font-black text-orange-400 font-mono mt-0.5">8x</div>
+        <div class="bg-slate-900/70 border border-slate-700/60 p-2.5 rounded-2xl">
+          <span class="text-[11px] text-slate-400 block mb-0.5">最高連擊</span>
+          <span id="victoryCombo" class="font-mono text-base sm:text-lg font-bold text-orange-400">0x</span>
         </div>
-        <div id="victoryMissesCard" class="bg-[#0b132b]/80 border border-slate-700/80 rounded-2xl p-2.5">
-          <div class="text-[11px] text-slate-400 font-medium">失誤次數</div>
-          <div id="victoryMisses" class="text-sm sm:text-base font-black text-rose-400 font-mono mt-0.5">0 次</div>
+        <div id="victoryMissesCard" class="bg-slate-900/70 border border-slate-700/60 p-2.5 rounded-2xl">
+          <span class="text-[11px] text-slate-400 block mb-0.5">失誤次數</span>
+          <span id="victoryMisses" class="font-mono text-base sm:text-lg font-bold text-rose-400">0 次</span>
         </div>
-        <div id="victoryAccuracyCard" class="bg-[#0b132b]/80 border border-slate-700/80 rounded-2xl p-2.5">
-          <div class="text-[11px] text-slate-400 font-medium">配對準確率</div>
-          <div id="victoryAccuracy" class="text-sm sm:text-base font-black text-emerald-400 font-mono mt-0.5">100%</div>
+        <div id="victoryAccuracyCard" class="bg-slate-900/70 border border-slate-700/60 p-2.5 rounded-2xl">
+          <span class="text-[11px] text-slate-400 block mb-0.5">準確率</span>
+          <span id="victoryAccuracy" class="font-mono text-base sm:text-lg font-bold text-emerald-400">100%</span>
         </div>
       </div>
 
       <!-- Action Button -->
-      <div class="flex gap-3">
-        <button id="victoryPlayAgainBtn" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-600/30 active:scale-95 transition flex items-center justify-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          重新開始 / 再來一局
-        </button>
+      <button id="victoryPlayAgainBtn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-600 to-sky-500 hover:from-sky-400 hover:to-indigo-500 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-sky-500/25 active:scale-95 transition">
+        再來一局 (重新開始)
+      </button>
+    </div>
+  </div>
+
+  <!-- Spelling Challenge Modal Dialog (Triggered on Match) -->
+  <div id="spellingModal" class="fixed inset-0 z-50 bg-[#060a17]/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-gradient-to-b from-[#131d38] to-[#0d1527] border border-sky-500/40 rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl text-center relative overflow-hidden transform transition-all scale-100">
+      <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-2xl shadow-inner">
+        ✍️
       </div>
+      <h3 class="text-base sm:text-lg font-black text-white tracking-tight">拼字小挑戰</h3>
+      <p class="text-xs text-slate-300 mt-0.5">請根據中文提示輸入正確的英文單字</p>
+
+      <!-- Chinese Prompt -->
+      <div class="my-4 p-3 bg-slate-900/80 rounded-2xl border border-emerald-500/40 shadow-inner">
+        <span class="text-xs font-semibold text-emerald-400 block mb-0.5">【中文意義】</span>
+        <span id="spellZhPrompt" class="text-lg sm:text-xl font-black text-emerald-300">蘋果</span>
+      </div>
+
+      <!-- Spelling Input Form -->
+      <form id="spellingForm" onsubmit="event.preventDefault(); handleSpellingSubmit();" class="space-y-3">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="spellInput" 
+            autocomplete="off" 
+            autocorrect="off" 
+            autocapitalize="off" 
+            spellcheck="false"
+            placeholder="請在此輸入英文..." 
+            class="w-full bg-[#0b132b] border-2 border-slate-700 focus:border-sky-400 rounded-xl px-4 py-2.5 text-center text-base sm:text-lg font-bold text-sky-100 tracking-wider focus:outline-none transition shadow-inner"
+          />
+        </div>
+
+        <!-- Feedback / Hint Message -->
+        <div id="spellFeedback" class="text-xs min-h-[1.25rem] font-semibold text-rose-400 transition-opacity"></div>
+
+        <div class="flex gap-2 pt-1">
+          <button 
+            type="button" 
+            id="spellHintBtn" 
+            class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 text-xs font-bold border border-slate-700 transition active:scale-95 flex items-center justify-center gap-1"
+          >
+            <span>💡</span> 提示
+          </button>
+          <button 
+            type="submit" 
+            id="spellSubmitBtn" 
+            class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-600/30 active:scale-95 transition"
+          >
+            確認送出
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -496,6 +557,7 @@
     }
 
     let currentMode = 'open'; // 'open' or 'memory'
+    let enableSpellingChallenge = false; // 是否啟用拼字挑戰開關
     let targetPairsCount = 8;
     let cards = [];
     let firstSelected = null;
@@ -519,6 +581,7 @@
     const comboDisplay = document.getElementById('comboDisplay');
     const categorySelect = document.getElementById('categorySelect');
     const modeSelect = document.getElementById('modeSelect');
+    const spellingToggleSelect = document.getElementById('spellingToggleSelect');
     const pairsCountSelect = document.getElementById('pairsCountSelect');
     const restartBtn = document.getElementById('restartBtn');
     const currentModeTag = document.getElementById('currentModeTag');
@@ -538,6 +601,14 @@
     const victoryAccuracy = document.getElementById('victoryAccuracy');
     const victoryGradeTag = document.getElementById('victoryGradeTag');
     const victoryPlayAgainBtn = document.getElementById('victoryPlayAgainBtn');
+
+    // Spelling Challenge Modal Elements
+    const spellingModal = document.getElementById('spellingModal');
+    const spellZhPrompt = document.getElementById('spellZhPrompt');
+    const spellInput = document.getElementById('spellInput');
+    const spellFeedback = document.getElementById('spellFeedback');
+    const spellHintBtn = document.getElementById('spellHintBtn');
+    let pendingMatchContext = null;
 
     const customModal = document.getElementById('customModal');
     const customCategoryName = document.getElementById('customCategoryName');
@@ -736,7 +807,7 @@
                 <span class="text-[10px] sm:text-xs font-black px-1.5 py-0.5 rounded-md ${
                   isEN ? 'bg-sky-500/25 text-sky-300 border border-sky-400/50' : 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/50'
                 }">
-                  ${isEN ? 'EN' : 'ZH'}
+                  ${isEN ? 'EN' : 'CH'}
                 </span>
                 ${isEN ? '<span class="text-xs text-sky-400 opacity-70">🔊</span>' : ''}
               </div>
@@ -811,14 +882,16 @@
         if (comboCount > maxCombo) maxCombo = comboCount;
         comboDisplay.textContent = comboCount;
 
-        if (card2.type === 'zh') {
-          speakEnglish(card1.spokenText);
-        }
+        // 朗讀英文單字
+        speakEnglish(card1.spokenText);
 
-        setTimeout(() => {
+        if (enableSpellingChallenge) {
+          // 啟用拼字模式：暫存配對資料並觸發拼字彈窗
+          openSpellingModal(elem1, elem2, card1, card2);
+        } else {
+          // 一般模式：直接消除卡片
           elem1.classList.remove(firstSelected.highlightClass);
           elem2.classList.remove(secondSelected.highlightClass);
-
           elem1.classList.add('card-matched');
           elem2.classList.add('card-matched');
 
@@ -833,7 +906,7 @@
           if (matchedPairsCount === currentTotal) {
             handleVictory();
           }
-        }, 320);
+        }
 
       } else {
         playErrorSound();
@@ -859,6 +932,116 @@
         }, 650);
       }
     }
+
+    function getCleanTargetWord(text) {
+      // 去除括號註解、斜線等，轉為簡潔比對單字
+      return text.replace(/\([^)]*\)/g, '').split('/')[0].trim();
+    }
+
+    function openSpellingModal(elem1, elem2, card1, card2) {
+      const enCard = card1.type === 'en' ? card1 : card2;
+      const zhCard = card1.type === 'zh' ? card1 : card2;
+      const rawTarget = enCard.text;
+      const cleanTarget = getCleanTargetWord(rawTarget);
+
+      pendingMatchContext = {
+        elem1,
+        elem2,
+        firstClass: firstSelected.highlightClass,
+        secondClass: secondSelected.highlightClass,
+        zhText: zhCard.text,
+        fullEnText: rawTarget,
+        targetWord: cleanTarget,
+        hintIndex: 0
+      };
+
+      spellZhPrompt.textContent = zhCard.text;
+      spellInput.value = '';
+      spellFeedback.textContent = '';
+      spellFeedback.className = 'text-xs min-h-[1.25rem] font-semibold text-rose-400';
+
+      spellingModal.classList.remove('hidden');
+      spellingModal.style.display = 'flex';
+
+      setTimeout(() => {
+        spellInput.focus();
+      }, 100);
+    }
+
+    function handleSpellingSubmit() {
+      if (!pendingMatchContext) return;
+
+      const userText = spellInput.value.trim().toLowerCase();
+      const target = pendingMatchContext.targetWord.toLowerCase();
+      // 同時容許完整文字（含空格與符號）的比對
+      const fullTarget = pendingMatchContext.fullEnText.toLowerCase().trim();
+
+      if (userText === target || userText === fullTarget) {
+        // 拼字正確
+        playMatchSound();
+        spellFeedback.textContent = '🎉 拼字完全正確！';
+        spellFeedback.className = 'text-xs min-h-[1.25rem] font-semibold text-emerald-400';
+        spellInput.classList.remove('border-rose-500');
+        spellInput.classList.add('border-emerald-400');
+
+        setTimeout(() => {
+          completeMatchAfterSpelling();
+        }, 450);
+      } else {
+        // 拼字錯誤
+        playErrorSound();
+        spellInput.classList.add('border-rose-500');
+        spellFeedback.textContent = '拼寫不完全相符，請再試一次！';
+        spellFeedback.className = 'text-xs min-h-[1.25rem] font-semibold text-rose-400';
+        spellInput.focus();
+        spellInput.select();
+      }
+    }
+
+    function completeMatchAfterSpelling() {
+      if (!pendingMatchContext) return;
+      const ctx = pendingMatchContext;
+
+      spellingModal.classList.add('hidden');
+      spellingModal.style.display = 'none';
+
+      ctx.elem1.classList.remove(ctx.firstClass);
+      ctx.elem2.classList.remove(ctx.secondClass);
+      ctx.elem1.classList.add('card-matched');
+      ctx.elem2.classList.add('card-matched');
+
+      matchedPairsCount++;
+      const currentTotal = cards.length / 2;
+      progressDisplay.textContent = `${matchedPairsCount} / ${currentTotal}`;
+
+      pendingMatchContext = null;
+      firstSelected = null;
+      secondSelected = null;
+      isProcessing = false;
+
+      if (matchedPairsCount === currentTotal) {
+        handleVictory();
+      }
+    }
+
+    // 提供字首提示功能
+    spellHintBtn.addEventListener('click', () => {
+      if (!pendingMatchContext) return;
+      const target = pendingMatchContext.targetWord;
+      const len = target.length;
+      let hintIdx = pendingMatchContext.hintIndex;
+
+      if (hintIdx < len) {
+        hintIdx++;
+        pendingMatchContext.hintIndex = hintIdx;
+      }
+
+      const revealed = target.substring(0, hintIdx);
+      const masked = revealed + '_ '.repeat(Math.max(0, len - hintIdx)).trim();
+      spellFeedback.textContent = `提示：${masked}`;
+      spellFeedback.className = 'text-xs min-h-[1.25rem] font-bold text-amber-300 font-mono';
+      spellInput.focus();
+    });
 
     function handleVictory() {
       gameActive = false;
@@ -1210,6 +1393,11 @@
 
     modeSelect.addEventListener('change', (e) => {
       currentMode = e.target.value;
+      initGame();
+    });
+
+    spellingToggleSelect.addEventListener('change', (e) => {
+      enableSpellingChallenge = (e.target.value === 'on');
       initGame();
     });
 
