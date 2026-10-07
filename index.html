@@ -697,7 +697,13 @@
         autocorrect="off"
         autocapitalize="off"
         spellcheck="false"
-        style="width:100%;background:#0b132b;border:2px solid #38bdf8;border-radius:12px;padding:10px;text-align:center;font-size:16px;font-weight:800;color:#f0f9ff;outline:none;margin-bottom:8px;"
+        inputmode="url"
+        enterkeyhint="done"
+        name="quiz_spelling_token"
+        data-lpignore="true"
+        data-form-type="other"
+        autofill="off"
+        style="width:100%;background:#0b132b;border:2px solid #38bdf8;border-radius:12px;padding:10px;text-align:center;font-size:16px;font-weight:800;color:#f0f9ff;outline:none;margin-bottom:8px;ime-mode:disabled;"
       />
 
       <!-- 提示文字顯示區 -->
@@ -1172,18 +1178,48 @@
       const h = rect.height;
       if (w <= 0 || h <= 0) return;
 
+      const isLandscape = w >= h;
       let cols = 4;
-      if (w < 480) {
-        cols = count <= 12 ? 3 : 4;
-      } else if (w < 768) {
+      let rows = 4;
+
+      // 嚴格確保各難度（總卡片數）在橫向與直向螢幕均能「完美填滿行列」，絕不留下空位缺角
+      if (count === 12) {
+        // 暖身 6 組 (12 張)：橫向 4×3 / 直向 3×4 (4×3 = 12，全滿)
+        cols = isLandscape ? 4 : 3;
+        rows = isLandscape ? 3 : 4;
+      } else if (count === 16) {
+        // 標準 8 組 (16 張)：4×4 (4×4 = 16，完美正方形全滿)
         cols = 4;
-      } else if (w < 1024) {
-        cols = count >= 20 ? 5 : 4;
+        rows = 4;
+      } else if (count === 20) {
+        // 高難 10 組 (20 張)：橫向 5×4 / 直向 4×5 (5×4 = 20，全滿)
+        cols = isLandscape ? 5 : 4;
+        rows = isLandscape ? 4 : 5;
+      } else if (count === 24) {
+        // 極限 12 組 (24 張)：橫向 6×4 / 直向 4×6 (6×4 = 24，全滿)
+        cols = isLandscape ? 6 : 4;
+        rows = isLandscape ? 4 : 6;
       } else {
-        cols = count >= 20 ? 6 : 5;
+        // 動態整除演算法：找出最貼合目前視窗比例且能整除卡片總數的行列組合
+        let bestCols = 4;
+        let minDiff = Infinity;
+        for (let c = 2; c <= count; c++) {
+          if (count % c === 0) {
+            const r = count / c;
+            if (c >= 2 && r >= 2) {
+              const cardRatio = (w / c) / (h / r);
+              const diff = Math.abs(cardRatio - 1.25);
+              if (diff < minDiff) {
+                minDiff = diff;
+                bestCols = c;
+              }
+            }
+          }
+        }
+        cols = bestCols;
+        rows = count / cols;
       }
 
-      const rows = Math.ceil(count / cols);
       gridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
       gridContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
     }
