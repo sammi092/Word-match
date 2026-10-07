@@ -194,7 +194,7 @@
 
   <!-- Controls Bar: Category, Mode, Count, Restart (Fluid Full-Width) -->
   <section class="w-full flex-shrink-0 grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2 mb-2">
-    <!-- Category Select & Edit Button -->
+    <!-- Category Select & Edit Button & Share Button -->
     <div class="flex items-center gap-1">
       <div class="relative flex-1 min-w-0">
         <select id="categorySelect" class="w-full appearance-none bg-slate-800/90 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm text-slate-200 font-medium focus:outline-none focus:border-sky-500 transition shadow-sm cursor-pointer pr-7 truncate">
@@ -204,6 +204,10 @@
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </div>
       </div>
+      <button id="shareCategoryBtn" title="分享目前題庫專屬連結" class="flex-shrink-0 px-2 py-1.5 bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-emerald-400 border border-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1 shadow-sm">
+        <span>🔗</span>
+        <span class="hidden md:inline text-xs text-slate-200">分享</span>
+      </button>
       <button id="editCategoryBtn" title="編輯修改目前題庫" class="flex-shrink-0 px-2 py-1.5 bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-sky-400 border border-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1 shadow-sm">
         <span>✏️</span>
         <span class="hidden md:inline text-xs text-slate-200">編輯</span>
@@ -403,6 +407,12 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Share Success Toast Notification -->
+  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-slate-900/95 border border-sky-500/60 shadow-2xl text-xs sm:text-sm font-bold text-white flex items-center gap-2 transform -translate-y-12 opacity-0 pointer-events-none transition-all duration-300">
+    <span id="toastIcon">🔗</span>
+    <span id="toastMessage">已成功複製題庫分享連結！</span>
   </div>
 
   <script>
@@ -622,6 +632,99 @@
     const customModalTitle = document.getElementById('customModalTitle');
     const customIncompleteBox = document.getElementById('customIncompleteBox');
     const customIncompleteList = document.getElementById('customIncompleteList');
+    const shareCategoryBtn = document.getElementById('shareCategoryBtn');
+    const toastNotification = document.getElementById('toastNotification');
+    const toastIcon = document.getElementById('toastIcon');
+    const toastMessage = document.getElementById('toastMessage');
+
+    let toastTimeout = null;
+    function showToast(message, icon = '🔗', duration = 3000) {
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastIcon.textContent = icon;
+      toastMessage.textContent = message;
+      toastNotification.classList.remove('-translate-y-12', 'opacity-0', 'pointer-events-none');
+      toastNotification.classList.add('translate-y-0', 'opacity-100');
+      toastTimeout = setTimeout(() => {
+        toastNotification.classList.remove('translate-y-0', 'opacity-100');
+        toastNotification.classList.add('-translate-y-12', 'opacity-0', 'pointer-events-none');
+      }, duration);
+    }
+
+    // Copy text to clipboard safely supporting iframe environment
+    function copyTextToClipboard(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.top = "-9999px";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+      document.body.removeChild(textArea);
+    }
+
+    // Share Category via URL parameter / hash
+    function shareCurrentCategory() {
+      const cat = savedCategories[currentCategoryId];
+      if (!cat || !cat.words || cat.words.length === 0) {
+        showToast('目前題庫沒有單字可供分享', '⚠️');
+        return;
+      }
+
+      try {
+        const payload = {
+          title: cat.name,
+          list: cat.words
+        };
+        // Encode using UTF-8 safe base64
+        const jsonStr = JSON.stringify(payload);
+        const encoded = btoa(encodeURIComponent(jsonStr));
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = `share=${encoded}`;
+        
+        copyTextToClipboard(url.toString());
+        showToast(`已複製「${cat.name}」分享連結，傳送給好友即可直接玩！`, '🎉');
+      } catch (e) {
+        console.error(e);
+        showToast('產生分享連結失敗，請再試一次', '⚠️');
+      }
+    }
+
+    // Check and import category from URL hash on load
+    function checkImportFromURL() {
+      try {
+        const hash = window.location.hash;
+        if (!hash || !hash.includes('share=')) return;
+
+        const rawData = hash.split('share=')[1];
+        if (!rawData) return;
+
+        const decoded = decodeURIComponent(atob(rawData));
+        const importedData = JSON.parse(decoded);
+
+        if (importedData && importedData.title && Array.isArray(importedData.list) && importedData.list.length >= 2) {
+          const importId = `cat_imported_${Date.now()}`;
+          savedCategories[importId] = {
+            name: `${importedData.title} (匯入)`,
+            words: importedData.list
+          };
+          currentCategoryId = importId;
+          updateCategoryDropdown();
+          showToast(`已成功匯入分享題庫：「${importedData.title}」！`, '📥', 4000);
+
+          // Clear hash to prevent duplicate prompt upon reload
+          history.replaceState(null, document.title, window.location.pathname + window.location.search);
+        }
+      } catch (e) {
+        console.warn('Could not parse shared category from URL', e);
+      }
+    }
 
     function shuffle(array) {
       const arr = [...array];
@@ -1382,6 +1485,10 @@
       openCustomModal(true);
     });
 
+    shareCategoryBtn.addEventListener('click', () => {
+      shareCurrentCategory();
+    });
+
     categorySelect.addEventListener('change', (e) => {
       if (e.target.value === '__CREATE_NEW__') {
         openCustomModal(false);
@@ -1442,6 +1549,7 @@
 
     // Bootstrap
     function bootstrap() {
+      checkImportFromURL();
       updateCategoryDropdown();
       initGame();
       requestAnimationFrame(updateGridLayout);
