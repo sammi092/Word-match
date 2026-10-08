@@ -1831,8 +1831,15 @@
       deleteConfirmModal.classList.add('hidden');
     });
 
-    cancelCustomBtn.addEventListener('click', () => customModal.classList.add('hidden'));
-    closeCustomModalBtn.addEventListener('click', () => customModal.classList.add('hidden'));
+    function closeCustomModal() {
+      customModal.classList.add('hidden');
+      if (categorySelect) {
+        categorySelect.value = currentCategoryId || '';
+      }
+    }
+
+    cancelCustomBtn.addEventListener('click', closeCustomModal);
+    closeCustomModalBtn.addEventListener('click', closeCustomModal);
     editCategoryBtn.addEventListener('click', () => {
       if (!currentCategoryId || !savedCategories[currentCategoryId]) {
         openCustomModal(false);
@@ -1991,6 +1998,8 @@
 
     categorySelect.addEventListener('change', (e) => {
       if (e.target.value === '__CREATE_NEW__') {
+        // 立即將下拉選單還原為原本題庫，避免文字停滯並確保下次點選仍能觸發
+        categorySelect.value = currentCategoryId || '';
         openCustomModal(false);
       } else {
         currentCategoryId = e.target.value;
