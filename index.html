@@ -423,6 +423,25 @@
       transition: all 0.35s ease-out !important;
     }
 
+    /* 暗牌模式：配對成功後維持翻開正面，並設為不能點選 */
+    .memory-mode-grid .card-matched {
+      opacity: 1 !important;
+      transform: scale(1) !important;
+      pointer-events: none !important;
+      cursor: default !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .memory-mode-grid .card-matched .card-inner {
+      transform: rotateY(0deg) !important;
+    }
+
+    .memory-mode-grid .card-matched .card-face {
+      border-color: #34d399 !important;
+      background: rgba(15, 23, 42, 0.92) !important;
+      box-shadow: 0 0 14px rgba(52, 211, 153, 0.35) !important;
+    }
+
     /* --- 彈窗通用樣式 --- */
     .modal-overlay {
       position: fixed;
@@ -706,8 +725,8 @@
         style="width:100%;background:#0b132b;border:2px solid #38bdf8;border-radius:12px;padding:10px;text-align:center;font-size:16px;font-weight:800;color:#f0f9ff;outline:none;margin-bottom:8px;ime-mode:disabled;"
       />
 
-      <!-- 提示文字顯示區 -->
-      <div id="spellingHintText" style="font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:2px;font-family:monospace;min-height:18px;margin-bottom:8px;"></div>
+      <!-- 提示文字顯示區：加入 white-space: pre-wrap 確保片語空格完整保留，letter-spacing 凸顯各字母長度 -->
+      <div id="spellingHintText" style="font-size:14px;font-weight:700;color:#fbbf24;letter-spacing:3px;font-family:monospace;white-space:pre-wrap;min-height:20px;margin-bottom:8px;"></div>
       <div id="spellingErrorMsg" style="font-size:11px;color:#f87171;font-weight:700;min-height:16px;margin-bottom:10px;"></div>
 
       <div style="display:flex;gap:6px;">
@@ -876,7 +895,7 @@
     let pendingMatchedCard1 = null;
     let pendingMatchedCard2 = null;
     let pendingTargetWord = '';
-    let hintRevealIndex = 0;
+    let hintCount = 0;
 
     // 音效合成器
     let audioCtx = null;
@@ -1029,7 +1048,7 @@
         });
       }
 
-      // 僅保留「新增自訂題庫」，移除紅色圈選的「貼上連結匯入題庫」選項
+      // 僅保留「新增自訂題庫」
       const addOpt = document.createElement('option');
       addOpt.value = '__CREATE_NEW__';
       addOpt.textContent = '➕ 新增自訂題庫...';
@@ -1182,25 +1201,19 @@
       let cols = 4;
       let rows = 4;
 
-      // 嚴格確保各難度（總卡片數）在橫向與直向螢幕均能「完美填滿行列」，絕不留下空位缺角
       if (count === 12) {
-        // 暖身 6 組 (12 張)：橫向 4×3 / 直向 3×4 (4×3 = 12，全滿)
         cols = isLandscape ? 4 : 3;
         rows = isLandscape ? 3 : 4;
       } else if (count === 16) {
-        // 標準 8 組 (16 張)：4×4 (4×4 = 16，完美正方形全滿)
         cols = 4;
         rows = 4;
       } else if (count === 20) {
-        // 高難 10 組 (20 張)：橫向 5×4 / 直向 4×5 (5×4 = 20，全滿)
         cols = isLandscape ? 5 : 4;
         rows = isLandscape ? 4 : 5;
       } else if (count === 24) {
-        // 極限 12 組 (24 張)：橫向 6×4 / 直向 4×6 (6×4 = 24，全滿)
         cols = isLandscape ? 6 : 4;
         rows = isLandscape ? 4 : 6;
       } else {
-        // 動態整除演算法：找出最貼合目前視窗比例且能整除卡片總數的行列組合
         let bestCols = 4;
         let minDiff = Infinity;
         for (let c = 2; c <= count; c++) {
@@ -1238,7 +1251,6 @@
       victoryModal.classList.add('hidden');
       spellingModal.classList.add('hidden');
 
-      // 取得選定題庫
       const currentCat = savedCategories[currentCategoryId] || (Object.keys(savedCategories).length > 0 ? savedCategories[Object.keys(savedCategories)[0]] : null);
       if (!currentCat || !currentCat.words || currentCat.words.length === 0) {
         progressDisplay.textContent = '0 / 0';
@@ -1266,23 +1278,22 @@
         return;
       }
 
-      // 更新模式標籤
       if (currentMode === 'memory') {
         currentModeTag.textContent = '暗牌記憶模式';
         currentModeTag.className = 'mode-tag memory-mode';
+        gridContainer.classList.add('memory-mode-grid');
       } else {
         currentModeTag.textContent = '明牌連連看';
         currentModeTag.className = 'mode-tag';
+        gridContainer.classList.remove('memory-mode-grid');
       }
 
-      // 洗牌並取出所需組數
       const shuffledSource = shuffle(currentCat.words);
       const actualPairsCount = Math.min(targetPairsCount, shuffledSource.length);
       activePairs = shuffledSource.slice(0, actualPairsCount);
 
       progressDisplay.textContent = `0 / ${actualPairsCount}`;
 
-      // 產生中英文雙份卡片
       let cardList = [];
       activePairs.forEach((item, index) => {
         cardList.push({
@@ -1425,7 +1436,10 @@
         const zhCardData = (card1Type === 'zh') ? cards[parseInt(firstCard.dataset.index, 10)] : cards[parseInt(secondCard.dataset.index, 10)];
 
         pendingTargetWord = enCardData.cleanWord;
-        hintRevealIndex = 0;
+        hintCount = 0;
+        spellingHintBtn.disabled = false;
+        spellingHintBtn.style.opacity = '1';
+        spellingHintBtn.style.cursor = 'pointer';
 
         const delayShowModal = isMemory ? 400 : 0;
         setTimeout(() => {
@@ -1476,6 +1490,13 @@
       c1.classList.remove('card-selected', 'card-selected-zh');
       c2.classList.remove('card-selected', 'card-selected-zh');
 
+      if (currentMode === 'memory') {
+        const in1 = c1.querySelector('.card-inner');
+        const in2 = c2.querySelector('.card-inner');
+        if (in1) in1.classList.remove('flipped');
+        if (in2) in2.classList.remove('flipped');
+      }
+
       matchedPairsCount++;
       progressDisplay.textContent = `${matchedPairsCount} / ${activePairs.length}`;
 
@@ -1489,7 +1510,6 @@
     }
 
     function checkSpelling() {
-      // 嚴格比對：只去除使用者前後不小心多打的換行或外圍空格，內部空格與大小寫必須完全一致
       const val = spellingInput.value.trim();
       if (!val) {
         spellingErrorMsg.textContent = '請輸入英文單字！';
@@ -1513,20 +1533,17 @@
       }
     }
 
-    // === 放棄本次配對機制 ===
     function abandonSpellingChallenge() {
       if (!pendingTargetWord) return;
 
-      // 關閉拼字視窗
       spellingModal.classList.add('hidden');
+      hintCount = 0;
 
-      // 中斷連擊、增加失誤紀錄
       currentCombo = 0;
       mistakes++;
       comboDisplay.textContent = '0';
       playMismatchSound();
 
-      // 解除兩張卡片選取狀態，若是暗牌則蓋回背面
       if (pendingMatchedCard1 && pendingMatchedCard2) {
         pendingMatchedCard1.classList.remove('card-selected', 'card-selected-zh');
         pendingMatchedCard2.classList.remove('card-selected', 'card-selected-zh');
@@ -1539,10 +1556,8 @@
         }
       }
 
-      // 僅提示已放棄本次配對，不洩漏正確答案
       showToast('已放棄本次配對，可重新挑戰！', '🏳️');
 
-      // 重設配對狀態
       pendingMatchedCard1 = null;
       pendingMatchedCard2 = null;
       firstCard = null;
@@ -1557,21 +1572,40 @@
 
     spellingAbandonBtn.addEventListener('click', abandonSpellingChallenge);
 
-    spellingHintBtn.addEventListener('click', () => {
-      if (!pendingTargetWord) return;
-      hintRevealIndex = Math.min(hintRevealIndex + 1, pendingTargetWord.length);
-      let hintStr = '';
-      for (let i = 0; i < pendingTargetWord.length; i++) {
-        const char = pendingTargetWord[i];
+    // 拼字提示產生器：空格維持原樣空格，其餘字母按提示次數給出第 1 個與最後 1 個字母，未揭示者以底線 _ 標示
+    function getHintDisplayText(word, step) {
+      if (!word) return '';
+      const len = word.length;
+      const res = [];
+      for (let i = 0; i < len; i++) {
+        const char = word[i];
         if (char === ' ') {
-          hintStr += '  '; // 空格維持空格空隙
-        } else if (i < hintRevealIndex) {
-          hintStr += char + ' ';
+          // 若字彙中有空格，提示維持空格
+          res.push(' ');
+        } else if (step >= 1 && i === 0) {
+          // 第 1 次提示：顯示第一個字母
+          res.push(char);
+        } else if (step >= 2 && i === len - 1) {
+          // 第 2 次提示：顯示最後一個字母
+          res.push(char);
         } else {
-          hintStr += '_ ';
+          // 其餘維持底線標示字數
+          res.push('_');
         }
       }
-      spellingHintText.textContent = hintStr.trim();
+      return res.join('');
+    }
+
+    spellingHintBtn.addEventListener('click', () => {
+      if (!pendingTargetWord || hintCount >= 2) return;
+      hintCount++;
+      spellingHintText.textContent = getHintDisplayText(pendingTargetWord, hintCount);
+
+      if (hintCount >= 2) {
+        spellingHintBtn.disabled = true;
+        spellingHintBtn.style.opacity = '0.5';
+        spellingHintBtn.style.cursor = 'not-allowed';
+      }
     });
 
     function handleVictory() {
@@ -1626,7 +1660,6 @@
       const seenEnglish = new Set();
       let duplicateCount = 0;
 
-      // 正則判斷中文字元 (CJK 漢字與常用中文標點) 及英文字母
       const cjkRegex = /[\u4e00-\u9fa5\u3400-\u4dbf]/;
       const engRegex = /[a-zA-Z]/;
 
@@ -1638,7 +1671,6 @@
         let en = '';
         let zh = '';
 
-        // 1. 優先檢查是否有明確的分隔標點 (逗號、頓號、冒號、Tab)
         const punctMatch = raw.match(/[,，、:：\t]+/);
 
         if (punctMatch) {
@@ -1657,26 +1689,21 @@
             zh = part2;
           }
         } else {
-          // 2. 空格分隔：以中英文交界點作為切分依據（保護英文內部的空格，如 the UK 之間的空格）
           const firstCjk = raw.search(cjkRegex);
           const firstEng = raw.search(engRegex);
 
           if (firstCjk !== -1 && firstEng !== -1) {
             if (firstEng < firstCjk) {
-              // 英文在前面，中文在後面 (例如："the UK 英國"、"ice cream 冰淇淋")
               en = raw.slice(0, firstCjk).trim();
               zh = raw.slice(firstCjk).trim();
             } else {
-              // 中文在前面，英文在後面 (例如："英國 the UK")
               zh = raw.slice(0, firstEng).trim();
               en = raw.slice(firstEng).trim();
             }
           } else if (firstEng !== -1) {
-            // 只有英文，缺少中文
             en = raw;
             zh = '';
           } else {
-            // 只有中文，缺少英文
             zh = raw;
             en = '';
           }
@@ -1692,7 +1719,6 @@
         } else if (!hasValidZh) {
           incompleteList.push({ line: lineNum, text: raw, reason: '缺少「中文解釋」' });
         } else {
-          // 正規化內部多餘連續空格為單一空格，但嚴格保留大小寫
           const normalizedEn = en.replace(/\s+/g, ' ').trim();
           const cleanKey = normalizedEn.toLowerCase();
 
@@ -1998,7 +2024,6 @@
 
     categorySelect.addEventListener('change', (e) => {
       if (e.target.value === '__CREATE_NEW__') {
-        // 立即將下拉選單還原為原本題庫，避免文字停滯並確保下次點選仍能觸發
         categorySelect.value = currentCategoryId || '';
         openCustomModal(false);
       } else {
