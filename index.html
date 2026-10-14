@@ -640,6 +640,10 @@
       cursor: pointer;
       box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.4);
       transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
     .btn-primary-action:active { transform: scale(0.97); }
@@ -741,7 +745,7 @@
         </div>
       </div>
 
-      <button id="shareCategoryBtn" class="btn-secondary" style="color:#34d399;" title="分享目前勾選題庫專屬連結">
+      <button id="shareCategoryBtn" class="btn-secondary" style="color:#34d399;" title="分享目前單一題庫專屬連結">
         <span>🔗</span>
       </button>
       <button id="importCategoryBtn" class="btn-secondary" style="color:#38bdf8;" title="貼上連結或代碼匯入題庫">
@@ -962,7 +966,7 @@
       <div style="display:flex;gap:6px;">
         <button id="nativeShareBtn" class="btn-secondary" style="display:none;color:#38bdf8;">📲 系統分享</button>
         <button id="copyShareUrlBtn" class="btn-primary-action" style="background:linear-gradient(90deg, #10b981, #0d9488);color:#0b132b;">
-          📋 <span id="copyBtnText">一鍵複製連結</span>
+          <span id="copyBtnIcon">📋</span> <span id="copyBtnText">一鍵複製連結</span>
         </button>
       </div>
     </div>
@@ -1430,6 +1434,7 @@
     const shareModalCount = document.getElementById('shareModalCount');
     const shareUrlInput = document.getElementById('shareUrlInput');
     const copyShareUrlBtn = document.getElementById('copyShareUrlBtn');
+    const copyBtnIcon = document.getElementById('copyBtnIcon');
     const copyBtnText = document.getElementById('copyBtnText');
     const nativeShareBtn = document.getElementById('nativeShareBtn');
 
@@ -2198,38 +2203,85 @@
       }
     });
 
-    shareCategoryBtn.addEventListener('click', async () => {
-      const pool = getActiveCategoryPool();
+    let resetCopyBtnTimeout = null;
 
-      if (!pool || !pool.words || pool.words.length === 0) {
+    shareCategoryBtn.addEventListener('click', () => {
+      const validIds = selectedCategoryIds.filter(id => Boolean(savedCategories[id]));
+      if (validIds.length === 0) {
         showToast('請先建立或勾選題庫後再進行分享！', '⚠️');
         return;
       }
-      const code = encodeToUrlSafe({ title: pool.name, list: pool.words });
-      const url = new URL(window.location.href);
-      url.searchParams.set('share', code);
-      url.hash = `share=${code}`;
-      const fullUrl = url.toString();
 
-      shareModalTitle.textContent = pool.name;
-      shareModalCount.textContent = `共收錄 ${pool.words.length} 組配對`;
+      // 限制：複選題庫不可製作分享連結
+      if (validIds.length > 1) {
+        showToast('複選題庫不可製作分享連結，請改為單選單一題庫！', '⚠️');
+        return;
+      }
+
+      // 單一題庫分享
+      const singleCat = savedCategories[validIds[0]];
+      const shareData = {
+        type: 'single',
+        title: singleCat.name,
+        list: singleCat.words
+      };
+
+      const code = encodeToUrlSafe(shareData);
+
+      // 純淨化網址產生（去除舊的 query 參數避免干擾）
+      let fullUrl = '';
+      try {
+        const base = (window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http'))
+          ? (window.location.origin + window.location.pathname)
+          : window.location.href.split('?')[0].split('#')[0];
+        const url = new URL(base);
+        url.searchParams.set('share', code);
+        url.hash = `share=${code}`;
+        fullUrl = url.toString();
+      } catch (e) {
+        const cleanBase = window.location.href.split('?')[0].split('#')[0];
+        fullUrl = `${cleanBase}?share=${code}#share=${code}`;
+      }
+
+      shareModalTitle.textContent = shareData.title;
+      shareModalCount.textContent = `共收錄 ${shareData.list.length} 組配對`;
       shareUrlInput.value = fullUrl;
+
+      // 重設按鈕預設狀態：開啟時顯示「一鍵複製連結」
+      clearTimeout(resetCopyBtnTimeout);
+      copyBtnIcon.textContent = '📋';
+      copyBtnText.textContent = '一鍵複製連結';
 
       if (navigator.share) {
         nativeShareBtn.style.display = 'block';
         nativeShareBtn.onclick = () => {
-          navigator.share({ title: `單字對對碰 - ${pool.name}`, text: `來挑戰「${pool.name}」單字配對！`, url: fullUrl });
+          navigator.share({ title: `單字對對碰 - ${shareData.title}`, text: `來挑戰「${shareData.title}」單字配對！`, url: fullUrl });
         };
       } else {
         nativeShareBtn.style.display = 'none';
       }
 
       shareModal.classList.remove('hidden');
-      const copied = await copyText(fullUrl);
+    });
+
+    // 點擊視窗內的「一鍵複製連結」按鈕進行複製
+    copyShareUrlBtn.addEventListener('click', async () => {
+      const urlToCopy = shareUrlInput.value;
+      if (!urlToCopy) return;
+
+      const copied = await copyText(urlToCopy);
       if (copied) {
-        copyBtnText.textContent = '✅ 已複製到剪貼簿！';
-        showToast(`已複製「${pool.name}」專屬分享連結！`, '🎉');
-        setTimeout(() => copyBtnText.textContent = '一鍵複製連結', 2000);
+        copyBtnIcon.textContent = '✅';
+        copyBtnText.textContent = '已複製到剪貼簿！';
+        showToast(`已成功複製分享連結！`, '🎉');
+
+        clearTimeout(resetCopyBtnTimeout);
+        resetCopyBtnTimeout = setTimeout(() => {
+          copyBtnIcon.textContent = '📋';
+          copyBtnText.textContent = '一鍵複製連結';
+        }, 2000);
+      } else {
+        showToast('複製失敗，請長按網址手動複製！', '⚠️');
       }
     });
 
@@ -2255,17 +2307,22 @@
       }
 
       const data = decodeFromUrlSafe(code);
-      if (data && data.title && Array.isArray(data.list) && data.list.length >= 2) {
-        const id = `cat_import_${Date.now()}`;
+      if (!data) {
+        return { success: false, msg: '無法辨識此連結內容，請確認是否完整複製！' };
+      }
+
+      // 支援單一題庫匯入（包含 40 組上限截取）
+      if (data.title && Array.isArray(data.list) && data.list.length >= 2) {
         const cleanTitle = data.title.replace(/\s*\(匯入\)$/, '');
-        
         let wordsToImport = data.list;
         let noticeSuffix = '';
+        
         if (wordsToImport.length > MAX_CATEGORY_WORDS) {
           wordsToImport = wordsToImport.slice(0, MAX_CATEGORY_WORDS);
           noticeSuffix = ` (超過上限，已自動保留前 ${MAX_CATEGORY_WORDS} 組)`;
         }
 
+        const id = `cat_import_${Date.now()}`;
         savedCategories[id] = { name: cleanTitle, words: wordsToImport };
         selectedCategoryIds = [id];
 
@@ -2276,7 +2333,7 @@
         return { success: true, title: cleanTitle + noticeSuffix, count: wordsToImport.length };
       }
 
-      return { success: false, msg: '無法辨識此連結內容，請確認是否完整複製！' };
+      return { success: false, msg: '連結中未包含有效的題庫單字！' };
     }
 
     importCategoryBtn.addEventListener('click', openImportModal);
