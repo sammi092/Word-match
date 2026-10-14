@@ -114,6 +114,12 @@
       border: 1px solid rgba(14, 165, 233, 0.3);
     }
 
+    .mode-tag.memory-mode {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+
     .stats-group {
       display: flex;
       align-items: center;
@@ -209,6 +215,117 @@
       height: 14px;
     }
 
+    /* 多選下拉選單與面板 */
+    .custom-multiselect-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .custom-select-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid #475569;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f1f5f9;
+      outline: none;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+
+    .custom-select-btn:hover { border-color: #38bdf8; }
+
+    .dropdown-menu-card {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      min-width: 260px;
+      max-width: 330px;
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid #475569;
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+      z-index: 60;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .dropdown-menu-card.hidden { display: none; }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      user-select: none;
+    }
+
+    .menu-item:hover { background: rgba(51, 65, 85, 0.6); }
+    .menu-item.selected { background: rgba(14, 165, 233, 0.18); }
+
+    .custom-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1.5px solid #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      color: transparent;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .custom-checkbox.checked {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #fff;
+    }
+
+    .menu-item-text {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .menu-item-badge {
+      font-size: 10px;
+      color: #94a3b8;
+      background: rgba(30, 41, 59, 0.8);
+      padding: 1px 6px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-micro {
+      background: transparent;
+      border: none;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: background 0.15s ease;
+    }
+    .btn-micro:hover { background: rgba(255, 255, 255, 0.08); }
+
     .btn-secondary {
       flex-shrink: 0;
       padding: 6px 9px;
@@ -250,7 +367,7 @@
 
     .btn-restart:active { transform: scale(0.95); }
 
-    /* --- 主遊戲畫布 --- */
+    /* --- 主遊戲畫布與卡片 --- */
     main#mainArea {
       position: relative;
       width: 100%;
@@ -276,7 +393,6 @@
       #gridContainer { gap: 8px; }
     }
 
-    /* --- 卡片結構 --- */
     .card-item {
       position: relative;
       width: 100%;
@@ -295,9 +411,7 @@
       transform-style: preserve-3d;
     }
 
-    .card-inner.flipped {
-      transform: rotateY(180deg);
-    }
+    .card-inner.flipped { transform: rotateY(180deg); }
 
     .card-face {
       position: absolute;
@@ -384,7 +498,6 @@
     .card-text.en { color: #f0f9ff; }
     .card-text.zh { color: #ecfdf5; }
 
-    /* 高亮選取動畫 */
     @keyframes pulseGlowEn {
       0%, 100% { box-shadow: 0 0 16px 2px rgba(56, 189, 248, 0.8); }
       50% { box-shadow: 0 0 8px 1px rgba(56, 189, 248, 0.3); }
@@ -423,7 +536,6 @@
       transition: all 0.35s ease-out !important;
     }
 
-    /* 暗牌模式：配對成功後維持翻開正面，並設為不能點選 */
     .memory-mode-grid .card-matched {
       opacity: 1 !important;
       transform: scale(1) !important;
@@ -532,7 +644,7 @@
 
     .btn-primary-action:active { transform: scale(0.97); }
 
-    /* --- 浮動 Toast 提示 --- */
+    /* Toast 提示 */
     #toastNotification {
       position: fixed;
       top: 18px;
@@ -563,10 +675,8 @@
 </head>
 <body>
 
-  <!-- 頂部導航與儀表板 -->
   <header>
     <div class="brand-group">
-      <!-- 標題前方大腦圖樣 (Brain SVG) -->
       <div class="brand-icon" title="腦力配對挑戰">
         <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04z"/>
@@ -582,7 +692,6 @@
       </div>
     </div>
 
-    <!-- 即時數據面板 -->
     <div class="stats-group">
       <div class="stat-pill">
         <span style="color:#fbbf24;">⏱️</span>
@@ -604,14 +713,35 @@
     </div>
   </header>
 
-  <!-- 控制列 -->
   <section class="controls-grid">
     <div style="display:flex;gap:4px;">
-      <div class="select-wrap" style="flex:1;">
-        <select id="categorySelect" class="custom-select"></select>
-        <svg class="select-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      <!-- 多選題庫下拉面板結構 -->
+      <div class="custom-multiselect-wrap">
+        <button id="categoryDropdownBtn" type="button" class="custom-select-btn" title="點擊展開題庫勾選清單">
+          <span id="categoryDropdownLabel" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📁 載入題庫中...</span>
+          <svg style="width:14px;height:14px;color:#94a3b8;flex-shrink:0;margin-left:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+
+        <div id="categoryDropdownMenu" class="dropdown-menu-card hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid rgba(71,85,105,0.5);">
+            <span id="menuSelectionStats" style="font-size:11px;font-weight:700;color:#38bdf8;">已勾選 0 課</span>
+            <div style="display:flex;gap:6px;">
+              <button id="selectAllCategoriesBtn" type="button" class="btn-micro" style="color:#34d399;">全選</button>
+              <button id="clearAllCategoriesBtn" type="button" class="btn-micro" style="color:#94a3b8;">重設</button>
+            </div>
+          </div>
+
+          <div id="categoryChecklist" style="max-height:190px;overflow-y:auto;padding:4px;"></div>
+
+          <div style="border-top:1px solid rgba(71,85,105,0.5);padding:6px;">
+            <button id="menuAddCustomBtn" type="button" style="color:#38bdf8;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:6px;border-radius:8px;background:rgba(14,165,233,0.1);border:1px dashed rgba(56,189,248,0.4);font-size:12px;font-weight:700;cursor:pointer;">
+              <span>➕</span> <span>新增自訂題庫...</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <button id="shareCategoryBtn" class="btn-secondary" style="color:#34d399;" title="分享目前題庫專屬連結">
+
+      <button id="shareCategoryBtn" class="btn-secondary" style="color:#34d399;" title="分享目前勾選題庫專屬連結">
         <span>🔗</span>
       </button>
       <button id="importCategoryBtn" class="btn-secondary" style="color:#38bdf8;" title="貼上連結或代碼匯入題庫">
@@ -652,7 +782,6 @@
     </button>
   </section>
 
-  <!-- 滿版全螢幕卡片區塊 -->
   <main id="mainArea">
     <div id="gridContainer"></div>
   </main>
@@ -725,7 +854,6 @@
         style="width:100%;background:#0b132b;border:2px solid #38bdf8;border-radius:12px;padding:10px;text-align:center;font-size:16px;font-weight:800;color:#f0f9ff;outline:none;margin-bottom:8px;ime-mode:disabled;"
       />
 
-      <!-- 提示文字顯示區：加入 white-space: pre-wrap 確保片語空格完整保留，letter-spacing 凸顯各字母長度 -->
       <div id="spellingHintText" style="font-size:14px;font-weight:700;color:#fbbf24;letter-spacing:3px;font-family:monospace;white-space:pre-wrap;min-height:20px;margin-bottom:8px;"></div>
       <div id="spellingErrorMsg" style="font-size:11px;color:#f87171;font-weight:700;min-height:16px;margin-bottom:10px;"></div>
 
@@ -754,7 +882,7 @@
       </div>
 
       <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;line-height:1.4;">
-        請在下方貼上您在 Safari 或由好友複製的「專屬分享連結」，系統將直接匯入並永久保存在此 App 中：
+        請在下方貼上您在 Safari 或由好友複製的「專屬分享連結」，系統將直接匯入並永久保存在此 App 中（單一題庫上限 40 組）：
       </p>
 
       <div style="margin-bottom:10px;">
@@ -790,19 +918,19 @@
 
       <p style="font-size:11px;color:#94a3b8;margin-bottom:8px;line-height:1.4;">
         格式：每行一組，以 <strong style="color:#38bdf8;">空格、逗號、頓號或冒號</strong> 隔開中英文。<br>
-        例如：<code style="color:#38bdf8;">the UK 英國</code> 或 <code style="color:#38bdf8;">banana, 香蕉</code>
+        例如：<code style="color:#38bdf8;">the UK 英國</code> 或 <code style="color:#38bdf8;">banana, 香蕉</code><br>
+        <span style="color:#fbbf24;">⚠️ 單一題庫數量限制：最少 6 組，最多 40 組單字。</span>
       </p>
 
       <textarea id="customInput" rows="6" style="width:100%;background:#0b132b;border:1px solid #475569;border-radius:10px;padding:10px;font-size:12px;color:#e2e8f0;font-family:monospace;outline:none;resize:none;" placeholder="apple 蘋果&#10;banana 香蕉&#10;cat 貓咪&#10;dog 狗狗&#10;book 書本&#10;desk 書桌"></textarea>
 
-      <!-- 缺項提示面板 -->
       <div id="customIncompleteBox" style="margin-top:8px;padding:8px;border-radius:10px;background:rgba(69,10,10,0.4);border:1px solid rgba(239,68,68,0.4);font-size:11px;color:#fca5a5;display:none;">
         <div style="font-weight:800;margin-bottom:4px;color:#f87171;">⚠️ 部分行格式不完整：</div>
         <ul id="customIncompleteList" style="list-style:disc;padding-left:16px;"></ul>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px;">
-        <span id="customCountNotice" style="font-size:11px;color:#94a3b8;">已偵測 0 組有效單字 (最少需 6 組)</span>
+        <span id="customCountNotice" style="font-size:11px;color:#94a3b8;">已偵測 0 組有效單字 (最少需 6 組，最多 40 組)</span>
         <div style="display:flex;gap:6px;">
           <button id="deleteCustomBtn" class="btn-secondary" style="display:none;color:#f43f5e;border-color:rgba(244,63,94,0.5);">刪除題庫</button>
           <button id="cancelCustomBtn" class="btn-secondary" style="color:#cbd5e1;">取消</button>
@@ -862,18 +990,23 @@
   </div>
 
   <script>
-    // === 預設題庫資料 (已完全清空內建題庫，全由使用者自訂) ===
+    // 預設題庫資料
     const DEFAULT_CATEGORIES = {};
+
+    // 單一題庫組數上限與下限常數
+    const MIN_CATEGORY_WORDS = 6;
+    const MAX_CATEGORY_WORDS = 40;
 
     // 本地持久化儲存鍵值
     const STORAGE_KEY_CATEGORIES = 'vocab_match_saved_categories_v3';
     const STORAGE_KEY_LAST_CAT = 'vocab_match_last_selected_category_v3';
+    const STORAGE_KEY_SELECTED_CATS = 'vocab_match_selected_categories_v3';
     const STORAGE_KEY_SETTINGS = 'vocab_match_settings_v3';
     const FALLBACK_KEYS = ['vocab_match_saved_categories_v2', 'vocab_match_saved_categories_v1'];
 
     // 遊戲狀態變數
     let savedCategories = {};
-    let currentCategoryId = '';
+    let selectedCategoryIds = []; // 支援同時勾選 1 個或多個題庫 ID
     let currentMode = 'open'; // 'open' (明牌) 或 'memory' (暗牌)
     let targetPairsCount = 8;
     let audioEnabled = true;
@@ -954,7 +1087,6 @@
       } catch (e) {}
     }
 
-    // === 本機題庫儲存與跨版本防遺失保護 ===
     function loadCategoriesFromStorage() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY_CATEGORIES);
@@ -1001,9 +1133,21 @@
 
     function loadGameSettings() {
       try {
-        const savedCatId = localStorage.getItem(STORAGE_KEY_LAST_CAT);
-        if (savedCatId && savedCategories[savedCatId]) {
-          currentCategoryId = savedCatId;
+        const rawSelected = localStorage.getItem(STORAGE_KEY_SELECTED_CATS);
+        if (rawSelected) {
+          const parsed = JSON.parse(rawSelected);
+          if (Array.isArray(parsed)) {
+            selectedCategoryIds = parsed.filter(id => Boolean(savedCategories[id]));
+          }
+        }
+        if (selectedCategoryIds.length === 0) {
+          const savedCatId = localStorage.getItem(STORAGE_KEY_LAST_CAT);
+          if (savedCatId && savedCategories[savedCatId]) {
+            selectedCategoryIds = [savedCatId];
+          } else {
+            const keys = Object.keys(savedCategories);
+            if (keys.length > 0) selectedCategoryIds = [keys[0]];
+          }
         }
         const rawSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
         if (rawSettings) {
@@ -1016,7 +1160,10 @@
 
     function saveGameSettings() {
       try {
-        localStorage.setItem(STORAGE_KEY_LAST_CAT, currentCategoryId);
+        localStorage.setItem(STORAGE_KEY_SELECTED_CATS, JSON.stringify(selectedCategoryIds));
+        if (selectedCategoryIds.length > 0) {
+          localStorage.setItem(STORAGE_KEY_LAST_CAT, selectedCategoryIds[0]);
+        }
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({
           mode: currentMode,
           pairs: targetPairsCount
@@ -1024,54 +1171,205 @@
       } catch (e) {}
     }
 
-    // === 題庫下拉選單更新 ===
-    function updateCategoryDropdown() {
-      const select = document.getElementById('categorySelect');
-      if (!select) return;
-      select.innerHTML = '';
+    function encodeToUrlSafe(obj) {
+      const json = JSON.stringify(obj);
+      const bytes = new TextEncoder().encode(json);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
 
-      const catEntries = Object.entries(savedCategories);
-
-      if (catEntries.length === 0) {
-        const emptyOpt = document.createElement('option');
-        emptyOpt.value = '';
-        emptyOpt.textContent = '📁 尚無題庫 (請點擊新增)';
-        emptyOpt.disabled = true;
-        emptyOpt.selected = true;
-        select.appendChild(emptyOpt);
-      } else {
-        catEntries.forEach(([id, cat]) => {
-          const opt = document.createElement('option');
-          opt.value = id;
-          opt.textContent = `📁 ${cat.name} (${cat.words.length}字)`;
-          select.appendChild(opt);
-        });
-      }
-
-      // 僅保留「新增自訂題庫」
-      const addOpt = document.createElement('option');
-      addOpt.value = '__CREATE_NEW__';
-      addOpt.textContent = '➕ 新增自訂題庫...';
-      select.appendChild(addOpt);
-
-      if (currentCategoryId && savedCategories[currentCategoryId]) {
-        select.value = currentCategoryId;
-      } else if (catEntries.length > 0) {
-        currentCategoryId = catEntries[0][0];
-        select.value = currentCategoryId;
-      } else {
-        currentCategoryId = '';
+    function decodeFromUrlSafe(str) {
+      try {
+        let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4) b64 += '=';
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return JSON.parse(new TextDecoder().decode(bytes));
+      } catch (e) {
+        return null;
       }
     }
 
-    // DOM 元件快取
+    // 開機自動偵測並匯入網址中的分享題庫 (受 40 組上限防護)
+    function checkImport() {
+      try {
+        const url = new URL(window.location.href);
+        let shareCode = url.searchParams.get('share');
+        if (!shareCode && window.location.hash) {
+          const match = window.location.hash.match(/share=([A-Za-z0-9_\-]+)/);
+          if (match) shareCode = match[1];
+        }
+
+        if (shareCode) {
+          const data = decodeFromUrlSafe(shareCode);
+          if (data && data.title && Array.isArray(data.list) && data.list.length >= 2) {
+            const cleanTitle = data.title.replace(/\s*\(匯入\)$/, '');
+            let targetWords = data.list;
+            let noteExtra = '';
+            if (targetWords.length > MAX_CATEGORY_WORDS) {
+              targetWords = targetWords.slice(0, MAX_CATEGORY_WORDS);
+              noteExtra = ` (已截取前 ${MAX_CATEGORY_WORDS} 組)`;
+            }
+
+            let targetId = Object.keys(savedCategories).find(k => savedCategories[k].name === cleanTitle);
+            if (!targetId) {
+              targetId = `cat_import_${Date.now()}`;
+              savedCategories[targetId] = {
+                name: cleanTitle,
+                words: targetWords
+              };
+            } else {
+              savedCategories[targetId].words = targetWords;
+            }
+
+            selectedCategoryIds = [targetId];
+            saveAllCategoriesToStorage();
+            saveGameSettings();
+            showToast(`已成功載入題庫：「${cleanTitle}」${noteExtra}！`, '🎉');
+          }
+        }
+      } catch (e) {
+        console.warn('網址分享題庫載入錯誤:', e);
+      }
+    }
+
+    // 取得當前題目池（多選時無數量上限，完整合併去重）
+    function getActiveCategoryPool() {
+      const validIds = selectedCategoryIds.filter(id => Boolean(savedCategories[id]));
+      if (validIds.length === 0) {
+        return { name: '', words: [] };
+      }
+      if (validIds.length === 1) {
+        return savedCategories[validIds[0]];
+      }
+
+      // 多選模式：合併各題庫所有單字並去重（無單一題庫上限限制）
+      const mergedWords = [];
+      const seenEn = new Set();
+      validIds.forEach(id => {
+        const cat = savedCategories[id];
+        if (cat && Array.isArray(cat.words)) {
+          cat.words.forEach(item => {
+            const key = item.en.trim().toLowerCase();
+            if (!seenEn.has(key)) {
+              seenEn.add(key);
+              mergedWords.push(item);
+            }
+          });
+        }
+      });
+
+      return {
+        name: `複選題庫 (${validIds.length} 課 · ${mergedWords.length} 字)`,
+        words: mergedWords
+      };
+    }
+
+    function updateCategoryDropdown() {
+      const dropdownLabel = document.getElementById('categoryDropdownLabel');
+      const checklist = document.getElementById('categoryChecklist');
+      const statsEl = document.getElementById('menuSelectionStats');
+      if (!dropdownLabel || !checklist) return;
+
+      checklist.innerHTML = '';
+      const catEntries = Object.entries(savedCategories);
+
+      // 過濾已不存在的勾選 ID
+      selectedCategoryIds = selectedCategoryIds.filter(id => Boolean(savedCategories[id]));
+
+      if (catEntries.length === 0) {
+        dropdownLabel.textContent = '📁 尚無題庫 (請點擊新增)';
+        if (statsEl) statsEl.textContent = '已勾選 0 課';
+        const emptyItem = document.createElement('div');
+        emptyItem.style.padding = '8px';
+        emptyItem.style.textAlign = 'center';
+        emptyItem.style.fontSize = '12px';
+        emptyItem.style.color = '#94a3b8';
+        emptyItem.textContent = '尚未建立題庫，請點下方新增';
+        checklist.appendChild(emptyItem);
+        return;
+      }
+
+      if (selectedCategoryIds.length === 0 && catEntries.length > 0) {
+        selectedCategoryIds = [catEntries[0][0]];
+        saveGameSettings();
+      }
+
+      const pool = getActiveCategoryPool();
+
+      if (selectedCategoryIds.length === 1) {
+        const singleCat = savedCategories[selectedCategoryIds[0]];
+        dropdownLabel.textContent = `📁 ${singleCat.name} (${singleCat.words.length}字)`;
+      } else {
+        dropdownLabel.textContent = `☑️ 複選 ${selectedCategoryIds.length} 課 (${pool.words.length}字)`;
+      }
+
+      if (statsEl) {
+        statsEl.textContent = `已勾選 ${selectedCategoryIds.length} / ${catEntries.length} 課 (${pool.words.length}字)`;
+      }
+
+      // 生成每筆題庫的勾選選項
+      catEntries.forEach(([id, cat]) => {
+        const isChecked = selectedCategoryIds.includes(id);
+
+        const itemEl = document.createElement('div');
+        itemEl.className = `menu-item ${isChecked ? 'selected' : ''}`;
+
+        const chkBox = document.createElement('div');
+        chkBox.className = `custom-checkbox ${isChecked ? 'checked' : ''}`;
+        chkBox.textContent = '✓';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'menu-item-text';
+        nameEl.textContent = cat.name;
+
+        const badgeEl = document.createElement('div');
+        badgeEl.className = 'menu-item-badge';
+        badgeEl.textContent = `${cat.words.length}字`;
+
+        itemEl.appendChild(chkBox);
+        itemEl.appendChild(nameEl);
+        itemEl.appendChild(badgeEl);
+
+        itemEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleCategorySelection(id);
+        });
+
+        checklist.appendChild(itemEl);
+      });
+    }
+
+    function toggleCategorySelection(id) {
+      const idx = selectedCategoryIds.indexOf(id);
+      if (idx > -1) {
+        if (selectedCategoryIds.length === 1) {
+          showToast('至少須保留勾選 1 個題庫！', '💡');
+          return;
+        }
+        selectedCategoryIds.splice(idx, 1);
+      } else {
+        selectedCategoryIds.push(id);
+      }
+      saveGameSettings();
+      updateCategoryDropdown();
+      initGame();
+    }
+
+    const categoryDropdownBtn = document.getElementById('categoryDropdownBtn');
+    const categoryDropdownMenu = document.getElementById('categoryDropdownMenu');
+    const selectAllCategoriesBtn = document.getElementById('selectAllCategoriesBtn');
+    const clearAllCategoriesBtn = document.getElementById('clearAllCategoriesBtn');
+    const menuAddCustomBtn = document.getElementById('menuAddCustomBtn');
+
     const mainArea = document.getElementById('mainArea');
     const gridContainer = document.getElementById('gridContainer');
     const timerDisplay = document.getElementById('timerDisplay');
     const progressDisplay = document.getElementById('progressDisplay');
     const comboDisplay = document.getElementById('comboDisplay');
     const currentModeTag = document.getElementById('currentModeTag');
-    const categorySelect = document.getElementById('categorySelect');
     const modeSelect = document.getElementById('modeSelect');
     const pairsCountSelect = document.getElementById('pairsCountSelect');
     const restartBtn = document.getElementById('restartBtn');
@@ -1079,7 +1377,6 @@
     const audioIconOn = document.getElementById('audioIconOn');
     const audioIconOff = document.getElementById('audioIconOff');
 
-    // 結算彈窗元件
     const victoryModal = document.getElementById('victoryModal');
     const victoryTimeVal = document.getElementById('victoryTimeVal');
     const victoryComboVal = document.getElementById('victoryComboVal');
@@ -1088,7 +1385,6 @@
     const victoryGradeTag = document.getElementById('victoryGradeTag');
     const victoryPlayAgainBtn = document.getElementById('victoryPlayAgainBtn');
 
-    // 拼字彈窗元件
     const spellingModal = document.getElementById('spellingModal');
     const spellingChinesePrompt = document.getElementById('spellingChinesePrompt');
     const spellingInput = document.getElementById('spellingInput');
@@ -1098,7 +1394,6 @@
     const spellingSubmitBtn = document.getElementById('spellingSubmitBtn');
     const spellingAbandonBtn = document.getElementById('spellingAbandonBtn');
 
-    // 匯入彈窗元件
     const importCategoryBtn = document.getElementById('importCategoryBtn');
     const importModal = document.getElementById('importModal');
     const importUrlInput = document.getElementById('importUrlInput');
@@ -1108,7 +1403,6 @@
     const confirmImportModalBtn = document.getElementById('confirmImportModalBtn');
     const closeImportModalBtn = document.getElementById('closeImportModalBtn');
 
-    // 自訂題庫管理元件
     const customModal = document.getElementById('customModal');
     const customModalTitle = document.getElementById('customModalTitle');
     const customCategoryName = document.getElementById('customCategoryName');
@@ -1123,14 +1417,12 @@
     const editCategoryBtn = document.getElementById('editCategoryBtn');
     const deleteCategoryDirectBtn = document.getElementById('deleteCategoryDirectBtn');
 
-    // 刪除確認彈窗元件
     const deleteConfirmModal = document.getElementById('deleteConfirmModal');
     const deleteConfirmCategoryName = document.getElementById('deleteConfirmCategoryName');
     const cancelDeleteModalBtn = document.getElementById('cancelDeleteModalBtn');
     const confirmDeleteModalBtn = document.getElementById('confirmDeleteModalBtn');
     let pendingDeleteId = null;
 
-    // 分享彈窗元件
     const shareCategoryBtn = document.getElementById('shareCategoryBtn');
     const shareModal = document.getElementById('shareModal');
     const closeShareModalBtn = document.getElementById('closeShareModalBtn');
@@ -1141,7 +1433,6 @@
     const copyBtnText = document.getElementById('copyBtnText');
     const nativeShareBtn = document.getElementById('nativeShareBtn');
 
-    // Toast 提示
     const toastNotification = document.getElementById('toastNotification');
     const toastIcon = document.getElementById('toastIcon');
     const toastMessage = document.getElementById('toastMessage');
@@ -1251,16 +1542,17 @@
       victoryModal.classList.add('hidden');
       spellingModal.classList.add('hidden');
 
-      const currentCat = savedCategories[currentCategoryId] || (Object.keys(savedCategories).length > 0 ? savedCategories[Object.keys(savedCategories)[0]] : null);
-      if (!currentCat || !currentCat.words || currentCat.words.length === 0) {
+      const currentPool = getActiveCategoryPool();
+
+      if (!currentPool || !currentPool.words || currentPool.words.length === 0) {
         progressDisplay.textContent = '0 / 0';
         gridContainer.style.gridTemplateColumns = '1fr';
         gridContainer.style.gridTemplateRows = '1fr';
         gridContainer.innerHTML = `
           <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:14px;text-align:center;gap:12px;padding:20px;">
             <div style="font-size:42px;">📝</div>
-            <div style="font-size:16px;font-weight:800;color:#f1f5f9;">目前尚未新增任何題庫</div>
-            <p style="font-size:12px;color:#94a3b8;max-width:320px;">點擊下方按鈕自訂輸入單字，或貼上由 Safari 複製的分享連結！</p>
+            <div style="font-size:16px;font-weight:800;color:#f1f5f9;">目前尚未選取或新增任何題庫</div>
+            <p style="font-size:12px;color:#94a3b8;max-width:320px;">點擊上方題庫選單勾選題庫，或點下方按鈕自訂輸入與匯入！</p>
             <div style="display:flex;gap:8px;margin-top:6px;">
               <button id="emptyStateImportBtn" class="btn-secondary" style="color:#38bdf8;border-color:#38bdf8;">
                 📥 貼上連結匯入
@@ -1279,16 +1571,17 @@
       }
 
       if (currentMode === 'memory') {
-        currentModeTag.textContent = '暗牌記憶模式';
+        currentModeTag.textContent = selectedCategoryIds.length > 1 ? `暗牌記憶 · 複選${selectedCategoryIds.length}課` : '暗牌記憶模式';
         currentModeTag.className = 'mode-tag memory-mode';
         gridContainer.classList.add('memory-mode-grid');
       } else {
-        currentModeTag.textContent = '明牌連連看';
+        currentModeTag.textContent = selectedCategoryIds.length > 1 ? `明牌連連看 · 複選${selectedCategoryIds.length}課` : '明牌連連看';
         currentModeTag.className = 'mode-tag';
         gridContainer.classList.remove('memory-mode-grid');
       }
 
-      const shuffledSource = shuffle(currentCat.words);
+      // 隨機自勾選題庫抽取卡片
+      const shuffledSource = shuffle(currentPool.words);
       const actualPairsCount = Math.min(targetPairsCount, shuffledSource.length);
       activePairs = shuffledSource.slice(0, actualPairsCount);
 
@@ -1452,6 +1745,7 @@
           setTimeout(() => spellingInput.focus(), 150);
         }, delayShowModal);
       } else {
+        // 暗牌記憶停留 750 毫秒看清牌面文字
         const delayBeforeError = isMemory ? 750 : 0;
 
         setTimeout(() => {
@@ -1569,10 +1863,8 @@
     spellingInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') checkSpelling();
     });
-
     spellingAbandonBtn.addEventListener('click', abandonSpellingChallenge);
 
-    // 拼字提示產生器：空格維持原樣空格，其餘字母按提示次數給出第 1 個與最後 1 個字母，未揭示者以底線 _ 標示
     function getHintDisplayText(word, step) {
       if (!word) return '';
       const len = word.length;
@@ -1580,16 +1872,12 @@
       for (let i = 0; i < len; i++) {
         const char = word[i];
         if (char === ' ') {
-          // 若字彙中有空格，提示維持空格
           res.push(' ');
         } else if (step >= 1 && i === 0) {
-          // 第 1 次提示：顯示第一個字母
           res.push(char);
         } else if (step >= 2 && i === len - 1) {
-          // 第 2 次提示：顯示最後一個字母
           res.push(char);
         } else {
-          // 其餘維持底線標示字數
           res.push('_');
         }
       }
@@ -1737,12 +2025,17 @@
     function updateCustomStatsUI() {
       const { validList, incompleteList, duplicateCount } = parseCustomText(customInput.value);
 
-      let noticeText = `已偵測 ${validList.length} 組有效單字 (最少需 6 組)`;
+      let noticeText = `已偵測 ${validList.length} 組有效單字 (最少需 ${MIN_CATEGORY_WORDS} 組，最多 ${MAX_CATEGORY_WORDS} 組)`;
       if (duplicateCount > 0) {
         noticeText += ` · 自動過濾 ${duplicateCount} 組重複單字`;
       }
       customCountNotice.textContent = noticeText;
-      customCountNotice.style.color = validList.length >= 6 ? '#34d399' : '#f87171';
+      
+      if (validList.length >= MIN_CATEGORY_WORDS && validList.length <= MAX_CATEGORY_WORDS) {
+        customCountNotice.style.color = '#34d399';
+      } else {
+        customCountNotice.style.color = '#f87171';
+      }
 
       if (incompleteList.length > 0) {
         customIncompleteBox.style.display = 'block';
@@ -1767,10 +2060,10 @@
     let editingCategoryId = null;
 
     function openCustomModal(isEdit = false) {
-      editingCategoryId = isEdit ? currentCategoryId : null;
+      editingCategoryId = isEdit && selectedCategoryIds.length === 1 ? selectedCategoryIds[0] : null;
       customIncompleteBox.style.display = 'none';
 
-      if (isEdit && savedCategories[editingCategoryId]) {
+      if (isEdit && editingCategoryId && savedCategories[editingCategoryId]) {
         const cat = savedCategories[editingCategoryId];
         customModalTitle.innerHTML = '<span>✏️</span> <span>編輯題庫</span>';
         customCategoryName.value = cat.name;
@@ -1791,8 +2084,13 @@
       const name = customCategoryName.value.trim() || '未命名自訂題庫';
       const { validList } = parseCustomText(customInput.value);
 
-      if (validList.length < 6) {
-        showToast('請至少輸入 6 組完整的中英文單字配對！', '⚠️');
+      if (validList.length < MIN_CATEGORY_WORDS) {
+        showToast(`請至少輸入 ${MIN_CATEGORY_WORDS} 組完整的中英文單字配對！`, '⚠️');
+        return;
+      }
+
+      if (validList.length > MAX_CATEGORY_WORDS) {
+        showToast(`單一題庫最多僅能收錄 ${MAX_CATEGORY_WORDS} 組單字（目前已輸入 ${validList.length} 組），請刪減後再儲存！`, '⚠️');
         return;
       }
 
@@ -1801,13 +2099,13 @@
         name: name,
         words: validList
       };
-      currentCategoryId = id;
+      selectedCategoryIds = [id];
 
       saveAllCategoriesToStorage();
       saveGameSettings();
       updateCategoryDropdown();
       customModal.classList.add('hidden');
-      showToast(`題庫「${name}」已儲存！`, '🎉');
+      showToast(`題庫「${name}」已儲存 (${validList.length}組)！`, '🎉');
       initGame();
     });
 
@@ -1825,8 +2123,11 @@
       if (!catId || !savedCategories[catId]) return;
       const targetName = savedCategories[catId].name;
       delete savedCategories[catId];
-      const remainingIds = Object.keys(savedCategories);
-      currentCategoryId = remainingIds.length > 0 ? remainingIds[0] : '';
+      selectedCategoryIds = selectedCategoryIds.filter(id => id !== catId);
+      if (selectedCategoryIds.length === 0) {
+        const remainingIds = Object.keys(savedCategories);
+        if (remainingIds.length > 0) selectedCategoryIds = [remainingIds[0]];
+      }
 
       saveAllCategoriesToStorage();
       saveGameSettings();
@@ -1836,12 +2137,17 @@
     }
 
     deleteCategoryDirectBtn.addEventListener('click', () => {
-      promptDeleteCategory(currentCategoryId);
+      if (selectedCategoryIds.length > 1) {
+        showToast('目前已勾選多課，請先單選欲刪除的單一題庫！', '💡');
+        return;
+      }
+      const targetId = selectedCategoryIds[0];
+      promptDeleteCategory(targetId);
     });
 
     deleteCustomBtn.addEventListener('click', () => {
       customModal.classList.add('hidden');
-      promptDeleteCategory(editingCategoryId || currentCategoryId);
+      promptDeleteCategory(editingCategoryId || selectedCategoryIds[0]);
     });
 
     cancelDeleteModalBtn.addEventListener('click', () => {
@@ -1859,62 +2165,44 @@
 
     function closeCustomModal() {
       customModal.classList.add('hidden');
-      if (categorySelect) {
-        categorySelect.value = currentCategoryId || '';
-      }
     }
 
     cancelCustomBtn.addEventListener('click', closeCustomModal);
     closeCustomModalBtn.addEventListener('click', closeCustomModal);
     editCategoryBtn.addEventListener('click', () => {
-      if (!currentCategoryId || !savedCategories[currentCategoryId]) {
+      if (selectedCategoryIds.length > 1) {
+        showToast('目前勾選了多個題庫，請先單選欲編輯的題庫！', '💡');
+        return;
+      }
+      const targetId = selectedCategoryIds[0];
+      if (!targetId || !savedCategories[targetId]) {
         openCustomModal(false);
       } else {
         openCustomModal(true);
       }
     });
 
-    function encodeToUrlSafe(obj) {
-      const json = JSON.stringify(obj);
-      const bytes = new TextEncoder().encode(json);
-      let bin = '';
-      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    }
-
-    function decodeFromUrlSafe(str) {
-      try {
-        let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
-        while (b64.length % 4) b64 += '=';
-        const bin = atob(b64);
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        return JSON.parse(new TextDecoder().decode(bytes));
-      } catch (e) {
-        return null;
-      }
-    }
-
     shareCategoryBtn.addEventListener('click', async () => {
-      const cat = savedCategories[currentCategoryId];
-      if (!cat) {
-        showToast('請先建立題庫後再進行分享！', '⚠️');
+      const pool = getActiveCategoryPool();
+
+      if (!pool || !pool.words || pool.words.length === 0) {
+        showToast('請先建立或勾選題庫後再進行分享！', '⚠️');
         return;
       }
-      const code = encodeToUrlSafe({ title: cat.name, list: cat.words });
+      const code = encodeToUrlSafe({ title: pool.name, list: pool.words });
       const url = new URL(window.location.href);
       url.searchParams.set('share', code);
       url.hash = `share=${code}`;
       const fullUrl = url.toString();
 
-      shareModalTitle.textContent = cat.name;
-      shareModalCount.textContent = `共收錄 ${cat.words.length} 組配對`;
+      shareModalTitle.textContent = pool.name;
+      shareModalCount.textContent = `共收錄 ${pool.words.length} 組配對`;
       shareUrlInput.value = fullUrl;
 
       if (navigator.share) {
         nativeShareBtn.style.display = 'block';
         nativeShareBtn.onclick = () => {
-          navigator.share({ title: `單字對對碰 - ${cat.name}`, text: `來挑戰「${cat.name}」單字配對！`, url: fullUrl });
+          navigator.share({ title: `單字對對碰 - ${pool.name}`, text: `來挑戰「${pool.name}」單字配對！`, url: fullUrl });
         };
       } else {
         nativeShareBtn.style.display = 'none';
@@ -1924,23 +2212,13 @@
       const copied = await copyText(fullUrl);
       if (copied) {
         copyBtnText.textContent = '✅ 已複製到剪貼簿！';
-        showToast(`已複製「${cat.name}」專屬分享連結！`, '🎉');
-        setTimeout(() => copyBtnText.textContent = '一鍵複製連結', 2000);
-      }
-    });
-
-    copyShareUrlBtn.addEventListener('click', async () => {
-      const ok = await copyText(shareUrlInput.value);
-      if (ok) {
-        copyBtnText.textContent = '✅ 已複製！';
-        showToast('已成功複製分享連結！', '📋');
+        showToast(`已複製「${pool.name}」專屬分享連結！`, '🎉');
         setTimeout(() => copyBtnText.textContent = '一鍵複製連結', 2000);
       }
     });
 
     closeShareModalBtn.addEventListener('click', () => shareModal.classList.add('hidden'));
 
-    // === 匯入題庫彈窗邏輯 ===
     function openImportModal() {
       importUrlInput.value = '';
       importErrorMsg.textContent = '';
@@ -1964,14 +2242,22 @@
       if (data && data.title && Array.isArray(data.list) && data.list.length >= 2) {
         const id = `cat_import_${Date.now()}`;
         const cleanTitle = data.title.replace(/\s*\(匯入\)$/, '');
-        savedCategories[id] = { name: cleanTitle, words: data.list };
-        currentCategoryId = id;
+        
+        let wordsToImport = data.list;
+        let noticeSuffix = '';
+        if (wordsToImport.length > MAX_CATEGORY_WORDS) {
+          wordsToImport = wordsToImport.slice(0, MAX_CATEGORY_WORDS);
+          noticeSuffix = ` (超過上限，已自動保留前 ${MAX_CATEGORY_WORDS} 組)`;
+        }
+
+        savedCategories[id] = { name: cleanTitle, words: wordsToImport };
+        selectedCategoryIds = [id];
 
         saveAllCategoriesToStorage();
         saveGameSettings();
         updateCategoryDropdown();
         initGame();
-        return { success: true, title: cleanTitle, count: data.list.length };
+        return { success: true, title: cleanTitle + noticeSuffix, count: wordsToImport.length };
       }
 
       return { success: false, msg: '無法辨識此連結內容，請確認是否完整複製！' };
@@ -1994,42 +2280,54 @@
     pasteClipboardBtn.addEventListener('click', async () => {
       try {
         if (navigator.clipboard && navigator.clipboard.readText) {
-          const txt = await navigator.clipboard.readText();
-          if (txt) {
-            importUrlInput.value = txt;
-            importErrorMsg.textContent = '';
-            showToast('已從剪貼簿貼上！', '📋');
+          const clipText = await navigator.clipboard.readText();
+          if (clipText) {
+            importUrlInput.value = clipText;
+            showToast('已從剪貼簿讀取內容！', '📋');
             return;
           }
         }
       } catch (e) {}
-      showToast('請長按輸入框選擇「貼上」！', '💡');
+      showToast('請在文字框長按並選擇「貼上」！', '💡');
     });
 
-    function checkImport() {
-      try {
-        let code = new URLSearchParams(window.location.search).get('share');
-        if (!code && window.location.hash) {
-          const m = window.location.hash.match(/share=([^&]+)/);
-          if (m) code = m[1];
-        }
-        if (!code) return;
-        const res = processImportData(code);
-        if (res.success) {
-          showToast(`已成功載入題庫：「${res.title}」！`, '📥');
-          window.history.replaceState(null, document.title, window.location.pathname);
-        }
-      } catch (e) {}
-    }
+    categoryDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      categoryDropdownMenu.classList.toggle('hidden');
+    });
 
-    categorySelect.addEventListener('change', (e) => {
-      if (e.target.value === '__CREATE_NEW__') {
-        categorySelect.value = currentCategoryId || '';
-        openCustomModal(false);
-      } else {
-        currentCategoryId = e.target.value;
-        saveGameSettings();
-        initGame();
+    selectAllCategoriesBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const allIds = Object.keys(savedCategories);
+      if (allIds.length === 0) return;
+      selectedCategoryIds = [...allIds];
+      saveGameSettings();
+      updateCategoryDropdown();
+      initGame();
+      showToast(`已全選 ${allIds.length} 個題庫進行綜合出題！`, '🎯');
+    });
+
+    clearAllCategoriesBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const allIds = Object.keys(savedCategories);
+      if (allIds.length === 0) return;
+      selectedCategoryIds = [allIds[0]];
+      saveGameSettings();
+      updateCategoryDropdown();
+      initGame();
+      showToast('已重設為單一題庫練習！', '💡');
+    });
+
+    menuAddCustomBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      categoryDropdownMenu.classList.add('hidden');
+      openCustomModal(false);
+    });
+
+    document.addEventListener('click', (e) => {
+      const wrap = document.querySelector('.custom-multiselect-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        categoryDropdownMenu.classList.add('hidden');
       }
     });
 
@@ -2069,7 +2367,6 @@
       resizeTimer = setTimeout(updateGridLayout, 60);
     });
 
-    // 啟動入口
     function bootstrap() {
       loadCategoriesFromStorage();
       loadGameSettings();
