@@ -834,7 +834,7 @@
       <div style="background:rgba(15,23,42,0.8);border-radius:12px;padding:12px;border:1px solid var(--border-color);margin-bottom:14px;">
         <div style="font-size:11px;color:#94a3b8;margin-bottom:2px;">中文提示：</div>
         <div id="spellingChinesePrompt" style="font-size:20px;font-weight:900;color:#34d399;">蘋果</div>
-        <div style="font-size:11px;color:#fbbf24;margin-top:6px;">⚠️ 嚴格模式：英文大小寫與空格必須完全一致</div>
+        <div style="font-size:11px;color:#38bdf8;margin-top:6px;">⚠️ 注意：請留意單字大小寫與單字間的空格！</div>
       </div>
 
       <input 
@@ -1810,17 +1810,33 @@
         return;
       }
 
-      if (val === pendingTargetWord) {
-        spellingErrorMsg.textContent = '';
-        spellingModal.classList.add('hidden');
-        showToast('拼字完全正確！消除成功', '🎉');
-        finalizeMatchSuccess(pendingMatchedCard1, pendingMatchedCard2);
-      } else {
-        if (val.toLowerCase() === pendingTargetWord.toLowerCase()) {
-          spellingErrorMsg.textContent = '字母正確，但大小寫或空格不符！請注意！';
+      // 標準化純字母（忽略空格與標點並轉小寫）
+      const cleanInput = val.replace(/[\s\-_'’.]/g, '').toLowerCase();
+      const cleanTarget = pendingTargetWord.replace(/[\s\-_'’.]/g, '').toLowerCase();
+
+      // 第一步：檢查字母本體是否正確
+      if (cleanInput === cleanTarget) {
+        // 第二步：檢查大小寫與單字間空格是否完全符合標準
+        const normalizedInput = val.replace(/\s+/g, ' ').trim();
+        const normalizedTarget = pendingTargetWord.replace(/\s+/g, ' ').trim();
+
+        if (normalizedInput === normalizedTarget) {
+          spellingErrorMsg.textContent = '';
+          spellingModal.classList.add('hidden');
+          showToast('拼字正確！配對成功 🎉', '🎉');
+          finalizeMatchSuccess(pendingMatchedCard1, pendingMatchedCard2);
         } else {
-          spellingErrorMsg.textContent = '拼寫不正確，大小寫與空格須完全相符！';
+          // 字母拼對，但大小寫或空格有誤
+          spellingErrorMsg.style.color = '#fbbf24'; // 琥珀警示黃
+          spellingErrorMsg.textContent = '拼寫正確，大小寫與空格不相符';
+          playMismatchSound();
+          spellingInput.classList.add('card-shake');
+          setTimeout(() => spellingInput.classList.remove('card-shake'), 400);
         }
+      } else {
+        // 字母本身拼錯
+        spellingErrorMsg.style.color = '#f87171'; // 錯誤紅
+        spellingErrorMsg.textContent = '拼寫不正確，請再試一次！';
         playMismatchSound();
         spellingInput.classList.add('card-shake');
         setTimeout(() => spellingInput.classList.remove('card-shake'), 400);
